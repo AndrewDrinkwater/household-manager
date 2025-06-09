@@ -2,7 +2,8 @@
 import React from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import ContractList from './contractList';
-import VendorList from './vendorList';
+import VendorList   from './vendorList';
+import CategoryList from './categoryList';
 
 function SubNavTabs() {
   const { pathname } = useLocation();
@@ -20,6 +21,12 @@ function SubNavTabs() {
       >
         Vendors
       </Link>
+      <Link
+        to="/contracts/categories"
+        className={pathname === '/contracts/categories' ? 'active' : ''}
+      >
+        Categories
+      </Link>
     </div>
   );
 }
@@ -27,15 +34,15 @@ function SubNavTabs() {
 export default function ContractManager() {
   return (
     <div>
-      {/* Sub‐tab navigation */}
       <SubNavTabs />
 
       <Routes>
-        <Route path="" element={<ContractList />} />
-        <Route path="vendors" element={<VendorList />} />
+        <Route path=""            element={<ContractList />} />
+        <Route path="vendors"     element={<VendorList />} />
+        <Route path="categories"  element={<CategoryList />} />
         <Route
           path="*"
-          element={<div>Select “Contracts” or “Vendors” above to begin.</div>}
+          element={<div>Select “Contracts”, “Vendors” or “Categories” above.</div>}
         />
       </Routes>
     </div>

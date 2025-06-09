@@ -1,71 +1,60 @@
-// src/modules/contractManager/contractList.js
 import React, { useEffect, useState } from 'react';
-import { getServices, deleteService } from '../../api';
-import ContractForm                     from './contractForm';
+import {
+  getCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory
+} from '../../api';
+import CategoryForm from './categoryForm';
 
-export default function ContractList() {
-  const [contracts, setContracts] = useState([]);
-  const [editing, setEditing]     = useState(null);
+export default function CategoryList() {
+  const [cats, setCats]       = useState([]);
+  const [editing, setEditing] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const loadContracts = () =>
-    getServices().then(res => setContracts(res.data));
-
+   const load = () => getCategories().then(r => setCats(r.data));
   useEffect(() => {
-    loadContracts();
+    load();
   }, []);
 
   const openNew  = () => { setEditing(null); setModalOpen(true); };
   const openEdit = c    => { setEditing(c);    setModalOpen(true); };
-  const handleDelete = id => {
-    if (window.confirm('Delete this contract?')) {
-      deleteService(id).then(loadContracts);
+  const remove   = id   => {
+    if (window.confirm('Delete this category?')) {
+      deleteCategory(id).then(load);
     }
   };
-  const handleSaved = () => {
+  const saved = () => {
     setModalOpen(false);
-    loadContracts();
+    load();
   };
 
   return (
     <div className="container">
-      <h3>Contracts</h3>
+      <h3>Categories</h3>
       <button onClick={openNew} className="btn btn-primary mb-2">
-        New Contract
+        New Category
       </button>
 
       <table>
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Contract #</th>
-            <th>Vendor</th>
-            <th>Username</th>
-            <th>Start Date</th>
-            <th>Next Due</th>
-            <th>Notes</th>
-            <th>Actions</th>
+            <th>Name</th><th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {contracts.map(c => (
+          {cats.map(c => (
             <tr key={c.id}>
               <td>{c.name}</td>
-              <td>{c.contract_number}</td>
-              <td>{c.Vendor?.name}</td>
-              <td>{c.username}</td>
-              <td>{new Date(c.start_date).toLocaleDateString('en-GB')}</td>
-              <td>{new Date(c.next_due_date).toLocaleDateString('en-GB')}</td>
-              <td>{c.notes}</td>
               <td>
                 <button
                   onClick={() => openEdit(c)}
                   className="btn btn-warning btn-sm"
                 >
                   Edit
-                </button>
+                </button>{' '}
                 <button
-                  onClick={() => handleDelete(c.id)}
+                  onClick={() => remove(c.id)}
                   className="btn btn-danger btn-sm"
                 >
                   Delete
@@ -85,9 +74,9 @@ export default function ContractList() {
             >
               ×
             </button>
-            <ContractForm
+            <CategoryForm
               existing={editing}
-              onSaved={handleSaved}
+              onSaved={saved}
               onCancel={() => setModalOpen(false)}
             />
           </div>
