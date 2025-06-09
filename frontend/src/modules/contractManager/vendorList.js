@@ -1,24 +1,24 @@
+// src/modules/contractManager/vendorList.js
 import React, { useEffect, useState } from 'react';
 import { getVendors, createVendor, updateVendor, deleteVendor } from '../../api';
 import VendorForm from './vendorForm';
-import Modal from '../../components/ui/modal';
 
 export default function VendorList() {
-  const [vendors, setVendors] = useState([]);
-  const [editing, setEditing] = useState(null);
+  const [vendors, setVendors]     = useState([]);
+  const [editing, setEditing]     = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const loadVendors = () => getVendors().then(r => setVendors(r.data));
-  useEffect(() => { loadVendors(); }, []);
+  // Load vendors
+  const loadVendors = () =>
+    getVendors().then(res => setVendors(res.data));
 
-  const openNew = () => {
-    setEditing(null);
-    setModalOpen(true);
-  };
-  const openEdit = v => {
-    setEditing(v);
-    setModalOpen(true);
-  };
+  useEffect(() => {
+    loadVendors();
+  }, []);
+
+  // Handlers
+  const openNew  = () => { setEditing(null); setModalOpen(true); };
+  const openEdit = v    => { setEditing(v);    setModalOpen(true); };
   const handleDelete = id => {
     if (window.confirm('Delete this vendor?')) {
       deleteVendor(id).then(loadVendors);
@@ -34,12 +34,45 @@ export default function VendorList() {
     });
   };
 
-  return (
-    <div>
-      <h3>Vendors</h3>
-      <button onClick={openNew} style={{ marginBottom: '1rem' }}>New Vendor</button>
+  // Inline modal styles
+  const backdropStyle = {
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(0,0,0,0.7)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 1000
+  };
+  const boxStyle = {
+    background: 'var(--bg)',
+    color: 'var(--text-light)',
+    borderRadius: '8px',
+    padding: '1.5rem',
+    width: '90%',
+    maxWidth: '400px',
+    position: 'relative',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+  };
+  const closeBtnStyle = {
+    position: 'absolute',
+    top: '0.5rem',
+    right: '0.5rem',
+    background: 'transparent',
+    border: 'none',
+    fontSize: '1.5rem',
+    color: 'var(--text-light)',
+    cursor: 'pointer'
+  };
 
-      <table border="1" cellPadding="8" cellSpacing="0">
+  return (
+    <div className="container">
+      <h3>Vendors</h3>
+      <button
+        onClick={openNew}
+        className="btn btn-primary mb-2"
+      >
+        New Vendor
+      </button>
+
+      <table>
         <thead>
           <tr>
             <th>Name</th>
@@ -55,8 +88,16 @@ export default function VendorList() {
               <td>{v.contact_info}</td>
               <td>{v.notes}</td>
               <td>
-                <button onClick={() => openEdit(v)}>Edit</button>
-                <button onClick={() => handleDelete(v.id)} style={{ marginLeft: 8 }}>
+                <button
+                  onClick={() => openEdit(v)}
+                  className="btn btn-warning btn-sm"
+                >
+                  Edit
+                </button>{' '}
+                <button
+                  onClick={() => handleDelete(v.id)}
+                  className="btn btn-danger btn-sm"
+                >
                   Delete
                 </button>
               </td>
@@ -66,13 +107,21 @@ export default function VendorList() {
       </table>
 
       {modalOpen && (
-        <Modal onClose={() => setModalOpen(false)}>
-          <VendorForm
-            existing={editing}
-            onSaved={handleSave}
-            onCancel={() => setModalOpen(false)}
-          />
-        </Modal>
+        <div style={backdropStyle} onClick={() => setModalOpen(false)}>
+          <div style={boxStyle} onClick={e => e.stopPropagation()}>
+            <button
+              style={closeBtnStyle}
+              onClick={() => setModalOpen(false)}
+            >
+              ×
+            </button>
+            <VendorForm
+              existing={editing}
+              onSaved={handleSave}
+              onCancel={() => setModalOpen(false)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
