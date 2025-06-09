@@ -1,18 +1,28 @@
 import React from 'react';
-import VendorList from './components/vendor/vendorList';
-import ContractList from './components/contract/contractList';
-import UserList from './components/user/userList';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import HomePage from './components/home/homePage';
+import ContractManager from './modules/contractManager/contractManager';
+import UserManager from './modules/userManager/userManager';
 
 function App() {
   return (
-    <div>
-      <h1>Household Manager</h1>
-      <VendorList />
-      <ContractList />
-      <UserList />
-    </div>
+    <Router>
+      <div>
+        <nav style={{ marginBottom: '2rem' }}>
+          <Link to="/" style={{ marginRight: 16 }}>Home</Link>
+          <Link to="/contracts" style={{ marginRight: 16 }}>Contract Management</Link>
+          <Link to="/admin/users">User Management</Link>
+        </nav>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/contracts/*" element={<ContractManager />} />
+          <Route path="/admin/users" element={<UserManager />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
 export default App;
+
 
