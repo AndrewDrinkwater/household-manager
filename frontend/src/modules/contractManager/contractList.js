@@ -1,27 +1,25 @@
 // src/modules/contractManager/contractList.js
 import React, { useEffect, useState } from 'react';
-import { getContracts, deleteContract } from '../../api';
+import { getServices, deleteService } from '../../api';
 import ContractForm from './contractForm';
 
 export default function ContractList() {
-  const [contracts, setContracts]     = useState([]);
-  const [editing, setEditing]         = useState(null);
-  const [modalOpen, setModalOpen]     = useState(false);
+  const [contracts, setContracts] = useState([]);
+  const [editing, setEditing]     = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  // Load contracts
   const loadContracts = () =>
-    getContracts().then(res => setContracts(res.data));
+    getServices().then(res => setContracts(res.data));
 
   useEffect(() => {
     loadContracts();
   }, []);
 
-  // Handlers
   const openNew  = () => { setEditing(null); setModalOpen(true); };
   const openEdit = c    => { setEditing(c);    setModalOpen(true); };
   const handleDelete = id => {
     if (window.confirm('Delete this contract?')) {
-      deleteContract(id).then(loadContracts);
+      deleteService(id).then(loadContracts);
     }
   };
   const handleSaved = () => {
@@ -29,41 +27,10 @@ export default function ContractList() {
     loadContracts();
   };
 
-  // Inline modal styles
-  const backdropStyle = {
-    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    background: 'rgba(0,0,0,0.7)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 1000
-  };
-  const boxStyle = {
-    background: 'var(--bg)',
-    color: 'var(--text-light)',
-    borderRadius: '8px',
-    padding: '1.5rem',
-    width: '90%',
-    maxWidth: '500px',
-    position: 'relative',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-  };
-  const closeBtnStyle = {
-    position: 'absolute',
-    top: '0.5rem',
-    right: '0.5rem',
-    background: 'transparent',
-    border: 'none',
-    fontSize: '1.5rem',
-    color: 'var(--text-light)',
-    cursor: 'pointer'
-  };
-
   return (
     <div className="container">
       <h3>Contracts</h3>
-      <button
-        onClick={openNew}
-        className="btn btn-primary mb-2"
-      >
+      <button onClick={openNew} className="btn btn-primary mb-2">
         New Contract
       </button>
 
@@ -75,8 +42,7 @@ export default function ContractList() {
             <th>Vendor</th>
             <th>User</th>
             <th>Start Date</th>
-            <th>End Date</th>
-            <th>Renewal</th>
+            <th>Next Due</th>
             <th>Notes</th>
             <th>Actions</th>
           </tr>
@@ -86,11 +52,10 @@ export default function ContractList() {
             <tr key={c.id}>
               <td>{c.name}</td>
               <td>{c.contract_number}</td>
-              <td>{c.Vendor?.name || c.vendorId}</td>
-              <td>{c.User?.username || c.userId}</td>
-              <td>{c.start_date}</td>
-              <td>{c.end_date}</td>
-              <td>{c.renewal_date}</td>
+              <td>{c.Vendor?.name}</td>
+              <td>{c.username}</td>
+              <td>{new Date(c.start_date).toLocaleDateString('en-GB')}</td>
+              <td>{new Date(c.next_due_date).toLocaleDateString('en-GB')}</td>
               <td>{c.notes}</td>
               <td>
                 <button
@@ -98,7 +63,7 @@ export default function ContractList() {
                   className="btn btn-warning btn-sm"
                 >
                   Edit
-                </button>{' '}
+                </button>
                 <button
                   onClick={() => handleDelete(c.id)}
                   className="btn btn-danger btn-sm"
@@ -111,12 +76,17 @@ export default function ContractList() {
         </tbody>
       </table>
 
-      {/* Inline Modal */}
       {modalOpen && (
-        <div style={backdropStyle} onClick={() => setModalOpen(false)}>
-          <div style={boxStyle} onClick={e => e.stopPropagation()}>
+        <div
+          className="modal-backdrop"
+          onClick={() => setModalOpen(false)}
+        >
+          <div
+            className="modal-content"
+            onClick={e => e.stopPropagation()}
+          >
             <button
-              style={closeBtnStyle}
+              className="modal-close"
               onClick={() => setModalOpen(false)}
             >
               ×

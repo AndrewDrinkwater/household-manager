@@ -1,179 +1,191 @@
-import React, { useState, useEffect } from 'react';
-import { createContract, updateContract, getVendors, getUsers } from '../../api';
+// src/modules/contractManager/contractForm.js
+import React, { useEffect, useState } from 'react';
+import {
+  createService,
+  updateService,
+  getCategories,
+  getSubcategories,
+  getVendors,
+  getFrequencies
+} from '../../api';
 
 export default function ContractForm({ existing, onSaved, onCancel }) {
-  const [contract, setContract] = useState(
-    existing || {
-      name: '',
-      contract_number: '',
-      start_date: '',
-      end_date: '',
-      renewal_date: '',
-      notes: '',
-      vendorId: '',
-      userId: ''
-    }
-  );
-  const [vendors, setVendors] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [service, setService] = useState({
+    name: '',
+    contract_number: '',
+    account_url: '',
+    username: '',
+    cost: '',
+    start_date: '',
+    next_due_date: '',
+    notes: '',
+    VendorId: '',
+    SubcategoryId: '',
+    FrequencyId: ''
+  });
+  const [categories, setCategories]       = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [vendors, setVendors]             = useState([]);
+  const [frequencies, setFrequencies]     = useState([]);
 
   useEffect(() => {
+    getCategories().then(r => setCategories(r.data));
+    getSubcategories().then(r => setSubcategories(r.data));
     getVendors().then(r => setVendors(r.data));
-    getUsers().then(r => setUsers(r.data));
-    if (existing) setContract(existing);
+    getFrequencies().then(r => setFrequencies(r.data));
+
+    if (existing) {
+      setService({
+        ...existing,
+        VendorId: existing.VendorId || existing.vendorId,
+        SubcategoryId: existing.SubcategoryId || existing.subcategoryId,
+        FrequencyId: existing.FrequencyId || existing.frequencyId
+      });
+    }
   }, [existing]);
 
   const handleChange = e => {
-    setContract({ ...contract, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setService(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = e => {
     e.preventDefault();
-    if (!contract.vendorId || !contract.userId) {
-      alert('Please select both a vendor and a user.');
-      return;
-    }
 
     const payload = {
-      name:            contract.name,
-      contract_number: contract.contract_number,
-      start_date:      contract.start_date,
-      end_date:        contract.end_date,
-      renewal_date:    contract.renewal_date,
-      notes:           contract.notes,
-      VendorId:        Number(contract.vendorId),
-      UserId:          Number(contract.userId)
+      ...service,
+      cost: Number(service.cost),
+      VendorId: Number(service.VendorId),
+      SubcategoryId: Number(service.SubcategoryId),
+      FrequencyId: Number(service.FrequencyId)
     };
 
     const action = existing
-      ? updateContract(existing.id, payload)
-      : createContract(payload);
+      ? updateService(existing.id, payload)
+      : createService(payload);
 
     action
-      .then(() => onSaved())
-      .catch(err => {
-        console.error(err.response?.data || err.message);
-        const msg = err.response?.data?.error
-          || JSON.stringify(err.response?.data)
-          || err.message;
-        alert('Error saving contract: ' + msg);
-      });
+      .then(onSaved)
+      .catch(err => alert('Error saving service: ' + err.message));
   };
-
-  const fieldStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    marginBottom: '1rem'
-  };
-
-  const labelStyle = { marginBottom: '0.25rem', fontWeight: 'bold' };
-  const inputStyle = { padding: '0.5rem', fontSize: '1rem' };
 
   return (
-    <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '500px' }}>
-      <div style={fieldStyle}>
-        <label style={labelStyle}>Name</label>
-        <input
-          style={inputStyle}
-          name="name"
-          value={contract.name}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      <div style={fieldStyle}>
-        <label style={labelStyle}>Contract Number</label>
-        <input
-          style={inputStyle}
-          name="contract_number"
-          value={contract.contract_number}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-        <div style={{ ...fieldStyle, flex: 1 }}>
-          <label style={labelStyle}>Start Date</label>
-          <input
-            style={inputStyle}
-            type="date"
-            name="start_date"
-            value={contract.start_date}
-            onChange={handleChange}
-          />
-        </div>
-        <div style={{ ...fieldStyle, flex: 1 }}>
-          <label style={labelStyle}>End Date</label>
-          <input
-            style={inputStyle}
-            type="date"
-            name="end_date"
-            value={contract.end_date}
-            onChange={handleChange}
-          />
-        </div>
-      </div>
-
-      <div style={fieldStyle}>
-        <label style={labelStyle}>Renewal Date</label>
-        <input
-          style={inputStyle}
-          type="date"
-          name="renewal_date"
-          value={contract.renewal_date}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div style={fieldStyle}>
-        <label style={labelStyle}>Vendor</label>
+    <form onSubmit={handleSubmit}>
+      <div className="mb-2">
+        <label>Category</label>
         <select
-          style={inputStyle}
-          name="vendorId"
-          value={contract.vendorId}
+          name="SubcategoryId"
+          value={service.SubcategoryId}
           onChange={handleChange}
-          required
         >
-          <option value="" disabled>Select vendor</option>
+          <option value="">— select —</option>
+          {subcategories.map(sc => (
+            <option key={sc.id} value={sc.id}>
+              {`${sc.Category.name} > ${sc.name}`}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mb-2">
+        <label>Vendor</label>
+        <select
+          name="VendorId"
+          value={service.VendorId}
+          onChange={handleChange}
+        >
+          <option value="">— select —</option>
           {vendors.map(v => (
-            <option key={v.id} value={v.id}>{v.name}</option>
+            <option key={v.id} value={v.id}>
+              {v.name}
+            </option>
           ))}
         </select>
       </div>
 
-      <div style={fieldStyle}>
-        <label style={labelStyle}>User</label>
-        <select
-          style={inputStyle}
-          name="userId"
-          value={contract.userId}
+      <div className="mb-2">
+        <label>Service Name</label>
+        <input
+          name="name"
+          value={service.name}
           onChange={handleChange}
           required
-        >
-          <option value="" disabled>Select user</option>
-          {users.map(u => (
-            <option key={u.id} value={u.id}>{u.username}</option>
-          ))}
-        </select>
+        />
       </div>
 
-      <div style={fieldStyle}>
-        <label style={labelStyle}>Notes</label>
+      <div className="mb-2">
+        <label>Contract Number</label>
+        <input
+          name="contract_number"
+          value={service.contract_number}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div className="mb-2">
+        <label>Account URL</label>
+        <input
+          name="account_url"
+          value={service.account_url}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div className="mb-2">
+        <label>Username</label>
+        <input
+          name="username"
+          value={service.username}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div className="mb-2">
+        <label>Cost</label>
+        <input
+          name="cost"
+          type="number"
+          step="0.01"
+          value={service.cost}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div className="mb-2">
+        <label>Start Date</label>
+        <input
+          name="start_date"
+          type="date"
+          value={service.start_date}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div className="mb-2">
+        <label>Next Due Date</label>
+        <input
+          name="next_due_date"
+          type="date"
+          value={service.next_due_date}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div className="mb-2">
+        <label>Notes</label>
         <textarea
-          style={{ ...inputStyle, minHeight: '80px' }}
           name="notes"
-          value={contract.notes}
+          value={service.notes}
           onChange={handleChange}
         />
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-        <button type="button" onClick={onCancel} style={{ padding: '0.5rem 1rem' }}>
+        <button type="button" className="btn btn-warning" onClick={onCancel}>
           Cancel
         </button>
-        <button type="submit" style={{ padding: '0.5rem 1rem' }}>
-          {existing ? 'Update' : 'Add'} Contract
+        <button type="submit" className="btn btn-primary">
+          Save
         </button>
       </div>
     </form>
