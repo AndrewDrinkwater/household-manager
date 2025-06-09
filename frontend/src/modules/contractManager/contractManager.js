@@ -1,31 +1,38 @@
+// src/modules/contractManager/contractManager.js
 import React from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import ContractList from './contractList';
 import VendorList from './vendorList';
 
+function SubNavTabs() {
+  const { pathname } = useLocation();
+  return (
+    <div className="sub-nav-tabs">
+      <Link
+        to="/contracts"
+        className={pathname === '/contracts' ? 'active' : ''}
+      >
+        Contracts
+      </Link>
+      <Link
+        to="/contracts/vendors"
+        className={pathname === '/contracts/vendors' ? 'active' : ''}
+      >
+        Vendors
+      </Link>
+    </div>
+  );
+}
+
 export default function ContractManager() {
   return (
-    <div style={{ padding: '1rem' }}>
-      <h2>Contract Management</h2>
-
-      <nav style={{ marginBottom: '1rem' }}>
-        {/* Link to the default child route (contracts list) */}
-        <Link to="/contracts" style={{ marginRight: 16 }}>
-          Contracts
-        </Link>
-        <Link to="/contracts/vendors">
-          Vendors
-        </Link>
-      </nav>
+    <div>
+      {/* Sub‐tab navigation */}
+      <SubNavTabs />
 
       <Routes>
-        {/* Default path under /contracts shows the contracts list */}
         <Route path="" element={<ContractList />} />
-
-        {/* /contracts/vendors shows the vendor list */}
         <Route path="vendors" element={<VendorList />} />
-
-        {/* Fallback for any other nested route */}
         <Route
           path="*"
           element={<div>Select “Contracts” or “Vendors” above to begin.</div>}

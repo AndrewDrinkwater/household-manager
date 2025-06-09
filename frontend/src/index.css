@@ -2,14 +2,18 @@
 
 /* 1. Color Palette */
 :root {
-  --blue-dark:   #0a2342;
-  --blue-mid:    #1e3a5f;
-  --blue-light:  #3b5c8e;
-  --accent:      #1e90ff;
-  --danger:      #d32f2f;
-  --warning:     #f9a825;
-  --text-light:  #f1f5f9;
-  --bg:          #0a182e;
+  --blue-dark:      #0a2342;
+  --blue-mid:       #1e3a5f;
+  --blue-light:     #3b5c8e;
+  --accent:         #1e90ff;
+  --danger:         #d32f2f;
+  --warning:        #f9a825;
+  --text-light:     #f1f5f9;
+  --bg:             #0a182e;
+  /* Table-specific */
+  --table-row-even: #142c4a;
+  --table-row-odd:  #0a182e;
+  --table-header:   #1e3a5f;
 }
 
 /* 2. Reset & Base */
@@ -31,7 +35,7 @@ a {
 
 /* 3. Container */
 .container {
-  max-width: 1000px;
+  max-width: 1200px;   /* wider tables */
   margin: 0 auto;
   padding: 1rem;
 }
@@ -50,6 +54,10 @@ h1, h2, h3 {
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+}
+/* spacing between buttons */
+.btn + .btn {
+  margin-left: 0.5rem;
 }
 .btn-primary {
   background: var(--accent);
@@ -73,7 +81,7 @@ h1, h2, h3 {
   background: #b71c1c;
 }
 .btn-sm {
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.75rem;
   font-size: 0.875rem;
 }
 
@@ -84,19 +92,19 @@ table {
   margin-bottom: 1rem;
 }
 thead {
-  background: var(--blue-mid);
+  background: var(--table-header);
 }
 th, td {
-  border: 1px solid var(--blue-mid);
+  border: 1px solid var(--table-header);
   padding: 0.75rem;
   color: var(--text-light);
   text-align: left;
 }
-tbody tr:nth-child(odd) {
-  background: var(--blue-dark);
-}
 tbody tr:nth-child(even) {
-  background: var(--blue-mid);
+  background: var(--table-row-even);
+}
+tbody tr:nth-child(odd) {
+  background: var(--table-row-odd);
 }
 
 /* 7. Forms */
@@ -114,7 +122,7 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--accent);
 }
 
-/* 8. Tab Navigation */
+/* 8. Main Tab Navigation */
 .nav-tabs {
   display: flex;
   border-bottom: 2px solid var(--blue-mid);
@@ -132,19 +140,42 @@ input:focus, select:focus, textarea:focus {
   background: var(--blue-mid);
 }
 .nav-tabs a.active {
-  background: var(--bg);
+  background: var(--accent);
+  color: var(--bg);
   font-weight: bold;
-  border-bottom: 2px solid var(--bg);
+  border-bottom: 2px solid var(--accent);
 }
 
-/* 9. Modal (inline) */
+/* 9. Sub-Tab Navigation (Contracts/Vendors) */
+.sub-nav-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--blue-mid);
+  margin-bottom: 1rem;
+}
+.sub-nav-tabs a {
+  padding: 0.5rem 1rem;
+  margin-right: 0.5rem;
+  background: var(--blue-dark);
+  color: var(--text-light);
+  border-radius: 4px 4px 0 0;
+  transition: background-color 0.2s ease;
+}
+.sub-nav-tabs a:hover {
+  background: var(--blue-mid);
+}
+.sub-nav-tabs a.active {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: bold;
+  border-bottom: 2px solid var(--accent);
+}
+
+/* 10. Modal (inline) */
 .modal-backdrop {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   z-index: 1000;
 }
 .modal-content {
@@ -160,15 +191,22 @@ input:focus, select:focus, textarea:focus {
 .modal-close {
   position: absolute;
   top: 0.5rem; right: 0.5rem;
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  color: var(--text-light);
+  background: transparent; border: none;
+  font-size: 1.5rem; color: var(--text-light);
   cursor: pointer;
 }
 
-/* 10. Utility Spacing */
+/* 11. Utility Spacing */
 .mb-1 { margin-bottom: 0.5rem; }
 .mb-2 { margin-bottom: 1rem; }
 .p-1  { padding: 0.5rem; }
 .p-2  { padding: 1rem; }
+
+/* Page header */
+.page-header {
+  margin: 1rem 0;
+  color: var(--accent);
+  font-size: 2rem;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 0.25rem;
+}
