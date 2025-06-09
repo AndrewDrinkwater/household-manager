@@ -1,72 +1,50 @@
 import React, { useEffect, useState } from 'react';
 import { getContracts, deleteContract } from '../../api';
 import ContractForm from './contractForm';
+import Modal from '../../components/ui/modal';
 
 export default function ContractList() {
   const [contracts, setContracts] = useState([]);
   const [editing, setEditing] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  const loadContracts = () => {
+  const loadContracts = () =>
     getContracts().then(res => setContracts(res.data));
+
+  useEffect(() => { loadContracts(); }, []);
+
+  const openNew = () => {
+    setEditing(null);
+    setModalOpen(true);
   };
 
-  useEffect(() => {
-    loadContracts();
-  }, []);
-
-  const handleEdit = (contract) => {
+  const openEdit = contract => {
     setEditing(contract);
-    setShowForm(true);
+    setModalOpen(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = id => {
     if (window.confirm('Delete this contract?')) {
       deleteContract(id).then(loadContracts);
     }
   };
 
-  const handleFormSaved = () => {
-    setEditing(null);
-    setShowForm(false);
+  const handleSaved = () => {
+    setModalOpen(false);
     loadContracts();
-  };
-
-  const handleAdd = () => {
-    setEditing(null);
-    setShowForm(true);
   };
 
   return (
     <div>
       <h3>Contracts</h3>
-
-      {!showForm && (
-        <button onClick={handleAdd} style={{ marginBottom: '1rem' }}>
-          Add Contract
-        </button>
-      )}
-
-      {showForm && (
-        <ContractForm
-          existing={editing}
-          onSaved={handleFormSaved}
-          onCancel={() => setShowForm(false)}
-        />
-      )}
-
+      <button onClick={openNew} style={{ marginBottom: '1rem' }}>New Contract</button>
+      
       <table border="1" cellPadding="8" cellSpacing="0">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Number</th>
-            <th>Vendor</th>
-            <th>User</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Renewal Date</th>
-            <th>Notes</th>
-            <th>Actions</th>
+            <th>Name</th><th>Number</th><th>Vendor</th><th>User</th>
+            <th>Start Date</th><th>End Date</th><th>Renewal</th>
+            <th>Notes</th><th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -81,11 +59,8 @@ export default function ContractList() {
               <td>{c.renewal_date}</td>
               <td>{c.notes}</td>
               <td>
-                <button onClick={() => handleEdit(c)}>Edit</button>
-                <button
-                  onClick={() => handleDelete(c.id)}
-                  style={{ marginLeft: '0.5rem' }}
-                >
+                <button onClick={() => openEdit(c)}>Edit</button>
+                <button onClick={() => handleDelete(c.id)} style={{ marginLeft: 8 }}>
                   Delete
                 </button>
               </td>
@@ -93,6 +68,16 @@ export default function ContractList() {
           ))}
         </tbody>
       </table>
+
+      {modalOpen && (
+        <Modal onClose={() => setModalOpen(false)}>
+          <ContractForm
+            existing={editing}
+            onSaved={handleSaved}
+            onCancel={() => setModalOpen(false)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }
