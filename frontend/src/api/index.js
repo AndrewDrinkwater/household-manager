@@ -2,6 +2,7 @@
 import axios from 'axios';
 
 const API_URL = 'http://localhost:4000/api';
+const UPLOADS_URL = 'http://localhost:4000/uploads';
 
 // --- Categories ---
 export const getCategories    = () => axios.get(`${API_URL}/categories`);
@@ -46,3 +47,24 @@ export const getUsers    = () => axios.get(`${API_URL}/users`);
 export const createUser  = data => axios.post(`${API_URL}/users`, data);
 export const updateUser  = (id, data) => axios.put(`${API_URL}/users/${id}`, data);
 export const deleteUser  = id => axios.delete(`${API_URL}/users/${id}`);
+
+// --- Attachments ---
+// Upload an attachment for a service
+export const uploadAttachment = (serviceId, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return axios.post(`${API_URL}/services/${serviceId}/attachments`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+// List all attachments for a service
+export const getAttachments = (serviceId) =>
+  axios.get(`${API_URL}/services/${serviceId}/attachments`);
+
+// Delete an attachment by its ID
+export const deleteAttachment = (attachmentId) =>
+  axios.delete(`${API_URL}/attachments/${attachmentId}`);
+
+// Expose the base uploads URL for image/file preview/download
+export { UPLOADS_URL };
