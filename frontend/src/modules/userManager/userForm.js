@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 export default function UserForm({ existing, onSaved, onCancel }) {
   const [user, setUser] = useState(
-    existing || { username: '', email: '', password_hash: '', role: 'user' }
+    existing || { username: '', email: '', password: '', role: 'user' }
   );
 
   useEffect(() => {
@@ -10,7 +10,7 @@ export default function UserForm({ existing, onSaved, onCancel }) {
       setUser({ 
         username: existing.username, 
         email: existing.email, 
-        password_hash: '', 
+        password: '',         // clear password on edit
         role: existing.role 
       });
     }
@@ -23,7 +23,7 @@ export default function UserForm({ existing, onSaved, onCancel }) {
   const handleSubmit = e => {
     e.preventDefault();
     onSaved(user);
-    setUser({ username: '', email: '', password_hash: '', role: 'user' });
+    setUser({ username: '', email: '', password: '', role: 'user' });
   };
 
   const fieldStyle = {
@@ -66,8 +66,8 @@ export default function UserForm({ existing, onSaved, onCancel }) {
         <input
           style={inputStyle}
           type="password"
-          name="password_hash"
-          value={user.password_hash}
+          name="password"
+          value={user.password}
           onChange={handleChange}
           required={!existing}
         />
