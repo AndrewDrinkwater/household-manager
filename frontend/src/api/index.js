@@ -22,10 +22,11 @@ export const updateVendor  = (id, data) => axios.put(`${API_URL}/vendors/${id}`,
 export const deleteVendor  = id => axios.delete(`${API_URL}/vendors/${id}`);
 
 // --- Frequencies ---
-export const getFrequencies    = () => axios.get(`${API_URL}/frequencies`);
-export const createFrequency   = data => axios.post(`${API_URL}/frequencies`, data);
-export const updateFrequency   = (id, data) => axios.put(`${API_URL}/frequencies/${id}`, data);
-export const deleteFrequency   = id => axios.delete(`${API_URL}/frequencies/${id}`);
+export const getFrequencies  = () => axios.get(`${API_URL}/frequencies`);
+export const createFrequency  = (data) => axios.post(`${API_URL}/frequencies`, data);
+export const updateFrequency  = (id, data) => axios.put(`${API_URL}/frequencies/${id}`, data);
+export const deleteFrequency  = (id) => axios.delete(`${API_URL}/frequencies/${id}`);
+
 
 // --- Services (formerly Contracts) ---
 export const getServices      = () => axios.get(`${API_URL}/services`);
