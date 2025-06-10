@@ -1,6 +1,9 @@
 // backend/src/routes.js
-const express    = require('express');
-const router     = express.Router();
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const router = express.Router();
 
 const Category    = require('./models/Category.js');
 const Subcategory = require('./models/Subcategory.js');
@@ -8,35 +11,104 @@ const Vendor      = require('./models/vendor.js');
 const Frequency   = require('./models/Frequency.js');
 const Service     = require('./models/Service.js');
 const User        = require('./models/user.js');
+const Attachment  = require('./models/Attachment.js'); // <-- Add
 
-/** --- FREQUENCIES (explicit handlers) --- **/
+// --- MULTER SETUP for file upload ---
+const UPLOAD_DIR = path.join(__dirname, '../uploads');
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
 
-// GET /api/frequencies
-router.get('/frequencies', async (req, res) => {
-  console.log('GET /frequencies');
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, UPLOAD_DIR);
+  },
+  filename: function (req, file, cb) {
+    // Retain extension from original file
+    const ext = path.extname(file.originalname);
+    const base = require('crypto').randomBytes(16).toString('hex');
+    cb(null, base + ext);
+  }
+});
+
+const upload = multer({ storage });
+
+// POST /api/services/:serviceId/attachments
+router.post('/services/:serviceId/attachments', upload.single('file'), async (req, res) => {
   try {
-    const freqs = await Frequency.findAll();
-    res.json(freqs);
+    const { serviceId } = req.params;
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const attachment = await Attachment.create({
+      ServiceId: serviceId,
+      filename: req.file.filename,          // saved random filename on disk
+      originalname: req.file.originalname,  // user's original filename
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
+
+    res.status(201).json(attachment);
   } catch (err) {
-    console.error('GET /frequencies error:', err);
+    console.error('Upload attachment error:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// POST /api/frequencies
+// GET /api/services/:serviceId/attachments
+router.get('/services/:serviceId/attachments', async (req, res) => {
+  try {
+    const { serviceId } = req.params;
+    const attachments = await Attachment.findAll({ where: { ServiceId: serviceId } });
+    res.json(attachments);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/attachments/:id
+router.delete('/attachments/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const attachment = await Attachment.findByPk(id);
+    if (!attachment) return res.status(404).json({ error: 'Attachment not found' });
+
+    // Delete file from disk
+    const absPath = path.join(UPLOAD_DIR, attachment.filename);
+    if (fs.existsSync(absPath)) fs.unlinkSync(absPath);
+
+    await attachment.destroy();
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Optional: serve attachments (for download)
+router.get('/attachments/download/:id', async (req, res) => {
+  try {
+    const attachment = await Attachment.findByPk(req.params.id);
+    if (!attachment) return res.status(404).json({ error: 'Attachment not found' });
+    const absPath = path.join(UPLOAD_DIR, attachment.filename);
+    if (!fs.existsSync(absPath)) return res.status(404).json({ error: 'File missing' });
+    res.download(absPath, attachment.originalname);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** --- FREQUENCIES (explicit handlers) --- **/
+router.get('/frequencies', async (req, res) => {
+  try { res.json(await Frequency.findAll()); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 router.post('/frequencies', async (req, res) => {
-  console.log('POST /frequencies body:', req.body);
   const { name, interval_months } = req.body;
   if (!name || interval_months == null) {
-    console.log('POST /frequencies missing fields');
     return res.status(400).json({ error: '`name` and `interval_months` are required.' });
   }
   try {
     const freq = await Frequency.create({ name, interval_months });
-    console.log('Created frequency:', freq.toJSON());
     res.status(201).json(freq);
   } catch (err) {
-    console.error('POST /frequencies error:', err);
     if (err.name === 'SequelizeValidationError') {
       return res.status(400).json({ errors: err.errors.map(e => e.message) });
     }
@@ -44,9 +116,7 @@ router.post('/frequencies', async (req, res) => {
   }
 });
 
-// PUT /api/frequencies/:id
 router.put('/frequencies/:id', async (req, res) => {
-  console.log(`PUT /frequencies/${req.params.id} body:`, req.body);
   const { name, interval_months } = req.body;
   if (!name || interval_months == null) {
     return res.status(400).json({ error: '`name` and `interval_months` are required.' });
@@ -56,14 +126,9 @@ router.put('/frequencies/:id', async (req, res) => {
       { name, interval_months },
       { where: { id: req.params.id } }
     );
-    if (!updated) {
-      console.log(`Frequency ${req.params.id} not found`);
-      return res.status(404).json({ error: 'Frequency not found' });
-    }
-    console.log(`Frequency ${req.params.id} updated`);
+    if (!updated) return res.status(404).json({ error: 'Frequency not found' });
     res.sendStatus(204);
   } catch (err) {
-    console.error('PUT /frequencies error:', err);
     if (err.name === 'SequelizeValidationError') {
       return res.status(400).json({ errors: err.errors.map(e => e.message) });
     }
@@ -71,75 +136,59 @@ router.put('/frequencies/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/frequencies/:id
 router.delete('/frequencies/:id', async (req, res) => {
-  console.log(`DELETE /frequencies/${req.params.id}`);
   try {
     const deleted = await Frequency.destroy({ where: { id: req.params.id } });
-    if (!deleted) {
-      console.log(`Frequency ${req.params.id} not found`);
-      return res.status(404).json({ error: 'Frequency not found' });
-    }
-    console.log(`Frequency ${req.params.id} deleted`);
+    if (!deleted) return res.status(404).json({ error: 'Frequency not found' });
     res.sendStatus(204);
   } catch (err) {
-    console.error('DELETE /frequencies error:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
 /** --- GENERIC CRUD for other models --- **/
 function crud(path, Model, include = []) {
-  // LIST
   router.get(`/${path}`, async (req, res) => {
     try {
       const items = await Model.findAll({ include });
       res.json(items);
     } catch (err) {
-      console.error(`GET /${path} error:`, err);
       res.status(500).json({ error: err.message });
     }
   });
-  // CREATE
   router.post(`/${path}`, async (req, res) => {
     try {
       const inst = await Model.create(req.body);
       res.status(201).json(inst);
     } catch (err) {
-      console.error(`POST /${path} error:`, err);
       res.status(400).json({ error: err.message });
     }
   });
-  // UPDATE
   router.put(`/${path}/:id`, async (req, res) => {
     try {
       const [updated] = await Model.update(req.body, { where: { id: req.params.id } });
       if (!updated) return res.status(404).json({ error: 'Not found' });
       res.sendStatus(204);
     } catch (err) {
-      console.error(`PUT /${path}/:id error:`, err);
       res.status(400).json({ error: err.message });
     }
   });
-  // DELETE
   router.delete(`/${path}/:id`, async (req, res) => {
     try {
       const deleted = await Model.destroy({ where: { id: req.params.id } });
       if (!deleted) return res.status(404).json({ error: 'Not found' });
       res.sendStatus(204);
     } catch (err) {
-      console.error(`DELETE /${path}/:id error:`, err);
       res.status(500).json({ error: err.message });
     }
   });
 }
 
-// Register generic CRUD
 crud('categories',   Category,    [Subcategory]);
 crud('subcategories',Subcategory, [Category]);
 crud('vendors',      Vendor);
 crud('services',     Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
-crud('contracts',    Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]); // alias
+crud('contracts',    Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
 crud('users',        User);
 
 module.exports = router;

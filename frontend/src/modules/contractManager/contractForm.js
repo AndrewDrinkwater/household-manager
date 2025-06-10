@@ -6,7 +6,11 @@ import {
   getCategories,
   getSubcategories,
   getVendors,
-  getFrequencies
+  getFrequencies,
+  uploadAttachment,
+  getAttachments,
+  deleteAttachment,
+  UPLOADS_URL
 } from '../../api';
 
 export default function ContractForm({ existing, onSaved, onCancel }) {
@@ -30,13 +34,15 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
   const [filteredSubcategories, setFilteredSubcategories] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [frequencies, setFrequencies] = useState([]);
+  const [attachments, setAttachments] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
+  // Load dropdowns and, if editing, details/attachments
   useEffect(() => {
     getCategories().then(r => setCategories(r.data));
     getSubcategories().then(r => setSubcategories(r.data));
     getVendors().then(r => setVendors(r.data));
     getFrequencies().then(r => setFrequencies(r.data));
-
     if (existing) {
       setService({
         ...existing,
@@ -45,6 +51,10 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
         SubcategoryId: existing.SubcategoryId || existing.subcategoryId,
         FrequencyId: existing.FrequencyId || existing.frequencyId
       });
+      // Load attachments for the existing service
+      getAttachments(existing.id).then(r => setAttachments(r.data));
+    } else {
+      setAttachments([]);
     }
   }, [existing]);
 
@@ -64,7 +74,7 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
       setService(prev => ({
         ...prev,
         CategoryId: value,
-        SubcategoryId: '', // reset subcategory when category changes
+        SubcategoryId: '',
       }));
     } else {
       setService(prev => ({ ...prev, [name]: value }));
@@ -87,8 +97,41 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
       : createService(payload);
 
     action
-      .then(onSaved)
+      .then(resp => {
+        // If creating, resp will be the new service. For update, just call onSaved.
+        if (!existing && resp?.data?.id) {
+          // If just created, update form to be in "edit" mode
+          getAttachments(resp.data.id).then(r => setAttachments(r.data));
+        }
+        onSaved(resp.data);
+      })
       .catch(err => alert('Error saving service: ' + err.message));
+  };
+
+  // --- Attachments ---
+  const handleFileChange = async e => {
+    const file = e.target.files[0];
+    if (!file || !existing?.id) return;
+    setUploading(true);
+    try {
+      await uploadAttachment(existing.id, file);
+      // Reload attachments
+      getAttachments(existing.id).then(r => setAttachments(r.data));
+    } catch (err) {
+      alert('Upload failed: ' + (err.response?.data?.error || err.message));
+    }
+    setUploading(false);
+    e.target.value = '';
+  };
+
+  const handleDeleteAttachment = async id => {
+    if (!window.confirm('Delete this attachment?')) return;
+    try {
+      await deleteAttachment(id);
+      setAttachments(attachments.filter(a => a.id !== id));
+    } catch (err) {
+      alert('Delete failed: ' + (err.response?.data?.error || err.message));
+    }
   };
 
   return (
@@ -100,6 +143,8 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
           gap: '1rem',
         }}
       >
+        {/* All your existing fields... */}
+        {/* ... (unchanged code for category, vendor, name, etc.) ... */}
         <div>
           <label>Category</label>
           <select
@@ -116,7 +161,6 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
             ))}
           </select>
         </div>
-
         <div>
           <label>Subcategory</label>
           <select
@@ -134,7 +178,6 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
             ))}
           </select>
         </div>
-
         <div>
           <label>Vendor</label>
           <select
@@ -151,7 +194,6 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
             ))}
           </select>
         </div>
-
         <div>
           <label>Frequency</label>
           <select
@@ -167,7 +209,6 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
             ))}
           </select>
         </div>
-
         <div>
           <label>Service Name</label>
           <input
@@ -177,7 +218,6 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
             required
           />
         </div>
-
         <div>
           <label>Contract Number</label>
           <input
@@ -186,7 +226,6 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
             onChange={handleChange}
           />
         </div>
-
         <div>
           <label>Account URL</label>
           <input
@@ -195,7 +234,6 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
             onChange={handleChange}
           />
         </div>
-
         <div>
           <label>Username</label>
           <input
@@ -204,7 +242,6 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
             onChange={handleChange}
           />
         </div>
-
         <div>
           <label>Cost</label>
           <input
@@ -215,7 +252,6 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
             onChange={handleChange}
           />
         </div>
-
         <div>
           <label>Start Date</label>
           <input
@@ -225,7 +261,6 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
             onChange={handleChange}
           />
         </div>
-
         <div>
           <label>Next Due Date</label>
           <input
@@ -235,7 +270,6 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
             onChange={handleChange}
           />
         </div>
-
         <div style={{ gridColumn: '1 / -1' }}>
           <label>Notes</label>
           <textarea
@@ -245,8 +279,43 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
             rows={3}
           />
         </div>
+        {/* --- ATTACHMENT UPLOAD & LIST --- */}
+        {existing && (
+          <div style={{ gridColumn: '1 / -1', marginTop: '1.5em' }}>
+            <label>Attachments</label>
+            <div style={{ marginBottom: '0.5em' }}>
+              <input
+                type="file"
+                onChange={handleFileChange}
+                disabled={uploading}
+              />
+              {uploading && <span style={{ marginLeft: 8 }}>Uploading…</span>}
+            </div>
+            <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
+              {attachments.map(att => (
+                <li key={att.id} style={{ marginBottom: 4 }}>
+                  <a
+                    href={`${UPLOADS_URL}/${att.filename}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {att.originalname}
+                  </a>
+                  <button
+                    type="button"
+                    style={{ marginLeft: 8 }}
+                    className="btn btn-sm btn-danger"
+                    onClick={() => handleDeleteAttachment(att.id)}
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+              {attachments.length === 0 && <li>No attachments yet.</li>}
+            </ul>
+          </div>
+        )}
       </div>
-
       <div
         style={{
           marginTop: '1rem',
