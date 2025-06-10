@@ -1,5 +1,5 @@
 // src/App.js
-import React from 'react';
+import React, { useState } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -10,6 +10,27 @@ import {
 import HomePage from './components/home/homePage';
 import ContractManager from './modules/contractManager/contractManager';
 import UserManager from './modules/userManager/userManager';
+
+// Simple login screen component with a button to "login"
+function LoginScreen({ onLogin }) {
+  return (
+    <div style={{
+      height: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexDirection: 'column'
+    }}>
+      <h2>Welcome to Household Manager</h2>
+      <button
+        onClick={onLogin}
+        style={{ padding: '1rem 2rem', fontSize: '1.25rem', cursor: 'pointer' }}
+      >
+        Login
+      </button>
+    </div>
+  );
+}
 
 function NavTabs() {
   const { pathname } = useLocation();
@@ -51,6 +72,12 @@ function PageHeader() {
 }
 
 export default function App() {
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  if (!loggedIn) {
+    return <LoginScreen onLogin={() => setLoggedIn(true)} />;
+  }
+
   return (
     <Router>
       <div className="container">
