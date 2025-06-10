@@ -22,7 +22,7 @@ function NavTabs() {
         to="/contracts"
         className={pathname.startsWith('/contracts') ? 'active' : ''}
       >
-        Contract Management
+        Service Management
       </Link>
       <Link
         to="/admin/users"
@@ -40,7 +40,7 @@ function PageHeader() {
   if (pathname === '/') {
     title = 'Home';
   } else if (pathname.startsWith('/contracts')) {
-    title = 'Contract Management';
+    title = 'Service Management';
   } else if (pathname === '/admin/users') {
     title = 'User Management (Admin Only)';
   } else {

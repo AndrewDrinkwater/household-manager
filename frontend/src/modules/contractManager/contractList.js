@@ -29,9 +29,9 @@ export default function ContractList() {
 
   return (
     <div className="container">
-      <h3>Contracts</h3>
+      <h3>Services</h3>
       <button onClick={openNew} className="btn btn-primary mb-2">
-        New Contract
+        New Service
       </button>
 
       <table>
