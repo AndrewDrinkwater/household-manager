@@ -31,6 +31,9 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// Serve uploaded files statically
+app.use('/uploads', express.static(require('path').join(__dirname, '..', 'uploads')));
+
 // Middleware
 app.use(cors());
 app.use(express.json());

@@ -16,9 +16,21 @@ const Attachment  = require('./models/Attachment.js'); // <-- Add
 // --- MULTER SETUP for file upload ---
 const UPLOAD_DIR = path.join(__dirname, '../uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
-const upload = multer({ dest: UPLOAD_DIR });
 
-// --- ATTACHMENTS ---
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, UPLOAD_DIR);
+  },
+  filename: function (req, file, cb) {
+    // Retain extension from original file
+    const ext = path.extname(file.originalname);
+    const base = require('crypto').randomBytes(16).toString('hex');
+    cb(null, base + ext);
+  }
+});
+
+const upload = multer({ storage });
+
 // POST /api/services/:serviceId/attachments
 router.post('/services/:serviceId/attachments', upload.single('file'), async (req, res) => {
   try {
@@ -27,8 +39,8 @@ router.post('/services/:serviceId/attachments', upload.single('file'), async (re
 
     const attachment = await Attachment.create({
       ServiceId: serviceId,
-      filename: req.file.originalname,
-      filepath: req.file.filename,
+      filename: req.file.filename,          // saved random filename on disk
+      originalname: req.file.originalname,  // user's original filename
       mimetype: req.file.mimetype,
       size: req.file.size,
     });
@@ -59,7 +71,7 @@ router.delete('/attachments/:id', async (req, res) => {
     if (!attachment) return res.status(404).json({ error: 'Attachment not found' });
 
     // Delete file from disk
-    const absPath = path.join(UPLOAD_DIR, attachment.filepath);
+    const absPath = path.join(UPLOAD_DIR, attachment.filename);
     if (fs.existsSync(absPath)) fs.unlinkSync(absPath);
 
     await attachment.destroy();
@@ -74,9 +86,9 @@ router.get('/attachments/download/:id', async (req, res) => {
   try {
     const attachment = await Attachment.findByPk(req.params.id);
     if (!attachment) return res.status(404).json({ error: 'Attachment not found' });
-    const absPath = path.join(UPLOAD_DIR, attachment.filepath);
+    const absPath = path.join(UPLOAD_DIR, attachment.filename);
     if (!fs.existsSync(absPath)) return res.status(404).json({ error: 'File missing' });
-    res.download(absPath, attachment.filename);
+    res.download(absPath, attachment.originalname);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
