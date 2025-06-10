@@ -1,53 +1,82 @@
+// src/modules/contractManager/frequencyList.js
 import React, { useEffect, useState } from 'react';
 import {
   getFrequencies,
-  createFrequency,
-  updateFrequency,
   deleteFrequency
 } from '../../api';
 import FrequencyForm from './frequencyForm';
 
 export default function FrequencyList() {
-  const [frequencies, setFrequencies] = useState([]);
+  const [freqs, setFreqs] = useState([]);
   const [editing, setEditing] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const loadFrequencies = () => getFrequencies().then(r => setFrequencies(r.data));
-  useEffect(() => { loadFrequencies(); }, []);
+  // Load all frequencies
+  const load = () => {
+    getFrequencies()
+      .then(res => setFreqs(res.data))
+      .catch(err => console.error('Error loading frequencies:', err));
+  };
 
-  const openNew = () => { setEditing(null); setModalOpen(true); };
-  const openEdit = f => { setEditing(f); setModalOpen(true); };
+  useEffect(load, []);
+
+  const openNew = () => {
+    setEditing(null);
+    setModalOpen(true);
+  };
+
+  const openEdit = f => {
+    setEditing(f);
+    setModalOpen(true);
+  };
+
   const handleDelete = id => {
     if (window.confirm('Delete this frequency?')) {
-      deleteFrequency(id).then(loadFrequencies);
+      deleteFrequency(id)
+        .then(load)
+        .catch(err => console.error('Error deleting frequency:', err));
     }
   };
-  const handleSave = freq => {
-    const action = editing
-      ? updateFrequency(editing.id, freq)
-      : createFrequency(freq);
-    action.then(() => {
-      setModalOpen(false);
-      loadFrequencies();
-    });
+
+  // Called after create/update
+  const handleSaved = () => {
+    setModalOpen(false);
+    load();
   };
 
   return (
-    <div>
+    <div className="container">
       <h3>Frequencies</h3>
-      <button onClick={openNew} className="btn btn-primary mb-2">New Frequency</button>
+      <button onClick={openNew} className="btn btn-primary mb-2">
+        New Frequency
+      </button>
 
-      <table border="1" cellPadding="8" cellSpacing="0" style={{width:'100%'}}>
+      <table className="table-auto w-full">
         <thead>
-          <tr><th>Name</th><th>Actions</th></tr>
+          <tr>
+            <th className="px-4 py-2">Name</th>
+            <th className="px-4 py-2">Interval Months</th>
+            <th className="px-4 py-2">Actions</th>
+          </tr>
         </thead>
         <tbody>
-          {frequencies.map(f => (
+          {freqs.map(f => (
             <tr key={f.id}>
-              <td>{f.name}</td>
-              <td>
-                <button onClick={() => openEdit(f)} className="btn btn-warning btn-sm">Edit</button>{' '}
-                <button onClick={() => handleDelete(f.id)} className="btn btn-danger btn-sm">Delete</button>
+              <td className="border px-4 py-2">{f.name}</td>
+              <td className="border px-4 py-2">{f.interval_months}</td>
+              <td className="border px-4 py-2">
+                <button
+                  onClick={() => openEdit(f)}
+                  className="btn btn-warning btn-sm mr-2"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(f.id)}
+                  className="btn btn-danger btn-sm"
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
@@ -55,10 +84,25 @@ export default function FrequencyList() {
       </table>
 
       {modalOpen && (
-        <div className="modal-backdrop" onClick={() => setModalOpen(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setModalOpen(false)}>×</button>
-            <FrequencyForm existing={editing} onSaved={handleSave} onCancel={() => setModalOpen(false)} />
+        <div
+          className="modal-backdrop"
+          onClick={() => setModalOpen(false)}
+        >
+          <div
+            className="modal-content"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              className="modal-close"
+              onClick={() => setModalOpen(false)}
+            >
+              ×
+            </button>
+            <FrequencyForm
+              existing={editing}
+              onSaved={handleSaved}
+              onCancel={() => setModalOpen(false)}
+            />
           </div>
         </div>
       )}

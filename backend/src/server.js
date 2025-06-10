@@ -19,7 +19,7 @@ app.use(cors());
 app.use(express.json());
 
 // Use routes at /api
-app.use('/api', routes);
+app.use('/api', require('./routes'));
 
 (async () => {
   try {

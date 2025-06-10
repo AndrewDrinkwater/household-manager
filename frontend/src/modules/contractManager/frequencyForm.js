@@ -22,19 +22,16 @@ export default function FrequencyForm({ existing, onSaved, onCancel }) {
     const trimmedName = name.trim();
     const intervalVal = Number(intervalMonths);
 
-    // Basic front-end validation
     if (!trimmedName) {
-      return alert('Name is required.');
+      alert('Name is required.');
+      return;
     }
     if (!intervalMonths || isNaN(intervalVal) || intervalVal < 1) {
-      return alert('Interval Months must be a number of at least 1.');
+      alert('Interval Months must be a number of at least 1.');
+      return;
     }
 
-    const payload = {
-      name: trimmedName,
-      interval_months: intervalVal,
-    };
-
+    const payload = { name: trimmedName, interval_months: intervalVal };
     console.log('Submitting frequency:', payload);
 
     const action = existing
@@ -42,14 +39,12 @@ export default function FrequencyForm({ existing, onSaved, onCancel }) {
       : createFrequency(payload);
 
     action
-      .then(onSaved)
+      .then(() => {
+        onSaved();
+      })
       .catch(err => {
-        console.error('Frequency save error:', err);
-        const msg =
-          err.response?.data?.errors?.join(', ') ||
-          err.response?.data?.error ||
-          err.message;
-        alert('Error saving frequency: ' + msg);
+        console.error('Frequency save error:', err.response?.data || err.message);
+        alert('Error saving frequency: ' + (err.response?.data?.error || err.message));
       });
   };
 
@@ -59,9 +54,9 @@ export default function FrequencyForm({ existing, onSaved, onCancel }) {
         <label>Name</label>
         <input
           name="name"
+          required
           value={name}
           onChange={e => setName(e.target.value)}
-          required
           placeholder="e.g. Monthly"
         />
       </div>
@@ -70,17 +65,21 @@ export default function FrequencyForm({ existing, onSaved, onCancel }) {
         <label>Interval Months</label>
         <input
           name="interval_months"
+          required
           type="number"
           min="1"
           value={intervalMonths}
           onChange={e => setIntervalMonths(e.target.value)}
-          required
           placeholder="e.g. 1"
         />
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-        <button type="button" className="btn btn-warning" onClick={onCancel}>
+        <button
+          type="button"
+          className="btn btn-warning"
+          onClick={onCancel}
+        >
           Cancel
         </button>
         <button type="submit" className="btn btn-primary">
