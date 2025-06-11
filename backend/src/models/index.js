@@ -1,15 +1,14 @@
-// backend/src/models/index.js
 const Service = require('./Service');
 const Attachment = require('./Attachment');
 const Vendor = require('./vendor');
 const Subcategory = require('./Subcategory');
 const Frequency = require('./Frequency');
+const User = require('./user');  // <--- ADD THIS LINE
 
 // Associations:
 Service.hasMany(Attachment, { foreignKey: 'ServiceId', onDelete: 'CASCADE' });
 Attachment.belongsTo(Service, { foreignKey: 'ServiceId' });
 
-// (existing associations)
 Vendor.hasMany(Service,    { onDelete: 'CASCADE' });
 Service.belongsTo(Vendor,  { foreignKey: { allowNull: false } });
 
@@ -25,4 +24,5 @@ module.exports = {
   Vendor,
   Subcategory,
   Frequency,
+  User,    // <--- EXPORT USER HERE
 };

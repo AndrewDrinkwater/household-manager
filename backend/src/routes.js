@@ -1,4 +1,3 @@
-// backend/src/routes.js
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
@@ -11,7 +10,98 @@ const Vendor      = require('./models/vendor.js');
 const Frequency   = require('./models/Frequency.js');
 const Service     = require('./models/Service.js');
 const User        = require('./models/user.js');
-const Attachment  = require('./models/Attachment.js'); // <-- Add
+const Attachment  = require('./models/Attachment.js');
+
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const { Op } = require('sequelize');
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// LOGIN ROUTE
+router.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  console.log('Login attempt:', { username }); 
+
+  if (!username || !password) {
+    console.log('Missing username or password');
+    return res.status(400).json({ message: 'Missing username or password' });
+  }
+
+  try {
+    const user = await User.findOne({ where: { username } });
+    if (!user) {
+      console.log('User not found:', username);
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      console.log('Password mismatch for user:', username);
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, {
+      expiresIn: '1h',
+    });
+
+    console.log('Login successful for user:', username);
+    res.json({ token, user: { id: user.id, username: user.username } });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// USER REGISTRATION
+router.post('/register', async (req, res) => {
+  const { username, email, password, role } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: 'username, email and password are required' });
+  }
+
+  try {
+    const existingUser = await User.findOne({
+      where: { [Op.or]: [{ username }, { email }] }
+    });
+    if (existingUser) {
+      return res.status(409).json({ error: 'Username or email already in use' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+      role: role || 'user',
+    });
+
+    const { password: _, ...userWithoutPassword } = newUser.toJSON();
+    res.status(201).json(userWithoutPassword);
+  } catch (err) {
+    console.error('User registration error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// USER UPDATE (with password hashing if password present)
+router.put('/users/:id', async (req, res) => {
+  try {
+    const updateData = { ...req.body };
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
+    } else {
+      delete updateData.password; // do not overwrite password if not provided
+    }
+
+    const [updated] = await User.update(updateData, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'User not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 // --- MULTER SETUP for file upload ---
 const UPLOAD_DIR = path.join(__dirname, '../uploads');
@@ -22,7 +112,6 @@ const storage = multer.diskStorage({
     cb(null, UPLOAD_DIR);
   },
   filename: function (req, file, cb) {
-    // Retain extension from original file
     const ext = path.extname(file.originalname);
     const base = require('crypto').randomBytes(16).toString('hex');
     cb(null, base + ext);
@@ -39,8 +128,8 @@ router.post('/services/:serviceId/attachments', upload.single('file'), async (re
 
     const attachment = await Attachment.create({
       ServiceId: serviceId,
-      filename: req.file.filename,          // saved random filename on disk
-      originalname: req.file.originalname,  // user's original filename
+      filename: req.file.filename,
+      originalname: req.file.originalname,
       mimetype: req.file.mimetype,
       size: req.file.size,
     });
@@ -70,7 +159,6 @@ router.delete('/attachments/:id', async (req, res) => {
     const attachment = await Attachment.findByPk(id);
     if (!attachment) return res.status(404).json({ error: 'Attachment not found' });
 
-    // Delete file from disk
     const absPath = path.join(UPLOAD_DIR, attachment.filename);
     if (fs.existsSync(absPath)) fs.unlinkSync(absPath);
 
@@ -184,11 +272,37 @@ function crud(path, Model, include = []) {
   });
 }
 
+// Add this to your routes.js
+
+router.get('/users', async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: { exclude: ['password'] },  // exclude passwords from response
+    });
+    res.json(users);
+  } catch (err) {
+    console.error('Get users error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const deleted = await User.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'User not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    console.error('Delete user error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 crud('categories',   Category,    [Subcategory]);
 crud('subcategories',Subcategory, [Category]);
 crud('vendors',      Vendor);
 crud('services',     Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
 crud('contracts',    Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
-crud('users',        User);
+// Removed generic crud('users', User) to avoid unsafe user creation
 
 module.exports = router;

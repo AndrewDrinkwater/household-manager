@@ -1,4 +1,3 @@
-// frontend/src/api/index.js
 import axios from 'axios';
 
 const API_URL = 'http://localhost:4000/api';
@@ -28,7 +27,6 @@ export const createFrequency  = (data) => axios.post(`${API_URL}/frequencies`, d
 export const updateFrequency  = (id, data) => axios.put(`${API_URL}/frequencies/${id}`, data);
 export const deleteFrequency  = (id) => axios.delete(`${API_URL}/frequencies/${id}`);
 
-
 // --- Services (formerly Contracts) ---
 export const getServices      = () => axios.get(`${API_URL}/services`);
 export const createService    = data => axios.post(`${API_URL}/services`, data);
@@ -41,10 +39,10 @@ export const createContract = createService;
 export const updateContract = updateService;
 export const deleteContract = deleteService;
 
-// after Vendors...
 // --- Users ---
+// CHANGE createUser endpoint to /register for safe password hashing
 export const getUsers    = () => axios.get(`${API_URL}/users`);
-export const createUser  = data => axios.post(`${API_URL}/users`, data);
+export const createUser  = data => axios.post(`${API_URL}/register`, data);  // <-- Changed here
 export const updateUser  = (id, data) => axios.put(`${API_URL}/users/${id}`, data);
 export const deleteUser  = id => axios.delete(`${API_URL}/users/${id}`);
 
