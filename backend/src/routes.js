@@ -305,7 +305,14 @@ router.get('/backlog-items/:itemId/attachments', async (req, res) => {
 // --------- Budget Months ---------
 router.get('/budget-months', async (req, res) => {
   try {
-    const months = await BudgetMonth.findAll();
+    // Ensure months are returned in chronological order so the client
+    // can reliably determine the latest month when generating the next
+    // entry. Without ordering, Sequelize may return records in the
+    // sequence they were inserted which could lead the UI to duplicate
+    // an existing month and trigger a unique constraint error.
+    const months = await BudgetMonth.findAll({
+      order: [['month', 'ASC']],
+    });
     res.json(months);
   } catch (err) {
     res.status(500).json({ error: err.message });
