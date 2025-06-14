@@ -136,7 +136,9 @@ const styles = {
     padding: '1rem 1.5rem',
     cursor: 'pointer',
     fontSize: '1rem',
-    borderBottom: '3px solid transparent',
+    borderBottomWidth: '3px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: 'transparent',
   },
   activeTabBtn: {
     borderBottomColor: '#007bff',
