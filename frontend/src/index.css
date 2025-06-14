@@ -90,6 +90,19 @@ table {
 .fixed-table td {
   word-wrap: break-word;
 }
+/* Finance table layout */
+.finance-table {
+  width: max-content; /* allow horizontal scroll when many months */
+}
+.finance-table th.line-name,
+.finance-table td.line-name {
+  width: 220px; /* generous width for line item name */
+}
+.finance-table th.month-col,
+.finance-table td.month-col {
+  min-width: 90px; /* enough space for month header */
+  white-space: nowrap;
+}
 /* Stack action buttons vertically */
 .action-buttons {
   display: flex;
