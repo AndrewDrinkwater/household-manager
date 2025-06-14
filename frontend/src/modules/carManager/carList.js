@@ -33,10 +33,20 @@ export default function CarList({ cars, onSelectCar, selectedCarId }) {
                   {car.make} {car.model} ({car.registration || '-'})
                 </div>
                 <div style={{ fontSize: '0.9rem', marginTop: '0.3rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-                  <div><strong>Tax Due:</strong> {car.nextTaxDue || '-'}</div>
-                  <div><strong>Insurance Due:</strong> {car.nextInsuranceDue || '-'}</div>
-                  <div><strong>MOT Due:</strong> {car.nextMotDue || '-'}</div>
-                  <div><strong>Service Due:</strong> {car.nextServiceDue || '-'}</div>
+                  <div>
+                    <strong>Tax Due:</strong> {car.nextTaxDueDate ? new Date(car.nextTaxDueDate).toLocaleDateString() : '-'}
+                  </div>
+                  <div>
+                    <strong>Insurance Due:</strong> {car.insuranceRenewalDate ? new Date(car.insuranceRenewalDate).toLocaleDateString() : '-'}
+                  </div>
+                  {car.motDueDate && (
+                    <div>
+                      <strong>MOT Due:</strong> {new Date(car.motDueDate).toLocaleDateString()}
+                    </div>
+                  )}
+                  <div>
+                    <strong>Service Due:</strong> {car.serviceDueDate ? new Date(car.serviceDueDate).toLocaleDateString() : '-'}
+                  </div>
                 </div>
               </div>
               <button
