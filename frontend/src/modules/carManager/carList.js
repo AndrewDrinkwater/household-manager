@@ -1,31 +1,27 @@
-// src/modules/carManager/carList.js
-import React, { useEffect, useState } from 'react';
-import { getCars } from '../../api';
-
-export default function CarList({ onSelectCar, selectedCarId }) {
-  const [cars, setCars] = useState([]);
-
-  useEffect(() => {
-    getCars().then(res => setCars(res.data));
-  }, []);
-
+export default function CarList({ cars, onSelectCar, onEditCar }) {
   return (
     <div>
       <h3>Cars</h3>
-      <ul style={{ listStyle: 'none', padding: 0 }}>
+      {cars.length === 0 && <p>No cars found.</p>}
+      <ul className="list-group">
         {cars.map(car => (
           <li
             key={car.id}
-            onClick={() => onSelectCar(car.id)}
-            style={{
-              padding: '0.5rem',
-              cursor: 'pointer',
-              backgroundColor: car.id === selectedCarId ? '#ddd' : 'transparent',
-              borderRadius: '4px',
-              marginBottom: '0.25rem'
-            }}
+            className="list-group-item d-flex justify-content-between align-items-center"
           >
-            {car.make} {car.model} ({car.registration || 'No reg'})
+            <span
+              className="car-list-item"
+              style={{ cursor: 'pointer' }}
+              onClick={() => onSelectCar(car)}
+            >
+              {car.make} {car.model} ({car.registration || 'No reg'})
+            </span>
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => onEditCar(car)}
+            >
+              Edit
+            </button>
           </li>
         ))}
       </ul>

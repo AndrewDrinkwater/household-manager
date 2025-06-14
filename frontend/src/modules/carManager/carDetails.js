@@ -1,116 +1,126 @@
-// src/modules/carManager/carDetails.js
-import React, { useEffect, useState } from 'react';
-import { getCar, getMots, getInsurances, getServiceRecords, getCarTaxes, getMileageRecords, getVendors } from '../../api';
+import React, { useState } from 'react';
+import OverviewTab from './tabs/OverviewTab';
+import MotTab from './tabs/MotTab';
+import InsuranceTab from './tabs/InsuranceTab';
+import ServiceTab from './tabs/ServiceTab';
+import MileageTab from './tabs/MileageTab';
 
-export default function CarDetails({ carId }) {
-  const [car, setCar] = useState(null);
-  const [mot, setMot] = useState(null);
-  const [insurance, setInsurance] = useState(null);
-  const [serviceRecord, setServiceRecord] = useState(null);
-  const [carTax, setCarTax] = useState(null);
-  const [lastMileage, setLastMileage] = useState(null);
-  const [vendors, setVendors] = useState([]);
+export default function CarDetails({ car, onClose }) {
+  const [activeTab, setActiveTab] = useState('mot'); // Default to first actual tab
 
-  useEffect(() => {
-    if (!carId) return;
-
-    getCar(carId).then(res => setCar(res.data));
-
-    // Load latest MOT (latest expiryDate)
-    getMots(carId).then(res => {
-      if (res.data.length) {
-        const latestMot = res.data.reduce((latest, curr) =>
-          new Date(curr.expiryDate) > new Date(latest.expiryDate) ? curr : latest
-        );
-        setMot(latestMot);
-      } else setMot(null);
-    });
-
-    // Load latest Insurance (by expiryDate)
-    getInsurances(carId).then(res => {
-      if (res.data.length) {
-        const latestIns = res.data.reduce((latest, curr) =>
-          new Date(curr.expiryDate) > new Date(latest.expiryDate) ? curr : latest
-        );
-        setInsurance(latestIns);
-      } else setInsurance(null);
-    });
-
-    // Load latest ServiceRecord (by serviceDate)
-    getServiceRecords(carId).then(res => {
-      if (res.data.length) {
-        const latestService = res.data.reduce((latest, curr) =>
-          new Date(curr.serviceDate) > new Date(latest.serviceDate) ? curr : latest
-        );
-        setServiceRecord(latestService);
-      } else setServiceRecord(null);
-    });
-
-    // Load latest CarTax (by expiryDate)
-    getCarTaxes(carId).then(res => {
-      if (res.data.length) {
-        const latestTax = res.data.reduce((latest, curr) =>
-          new Date(curr.expiryDate) > new Date(latest.expiryDate) ? curr : latest
-        );
-        setCarTax(latestTax);
-      } else setCarTax(null);
-    });
-
-    // Load last MileageRecord (by recordDate)
-    getMileageRecords(carId).then(res => {
-      if (res.data.length) {
-        const latestMileage = res.data.reduce((latest, curr) =>
-          new Date(curr.recordDate) > new Date(latest.recordDate) ? curr : latest
-        );
-        setLastMileage(latestMileage);
-      } else setLastMileage(null);
-    });
-
-    // Load Vendors for Insurance Provider name
-    getVendors().then(res => setVendors(res.data));
-
-  }, [carId]);
-
-  // Helper to find Vendor name by id
-  const findVendorName = (id) => {
-    const v = vendors.find(v => v.id === id);
-    return v ? v.name : 'Unknown';
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'mot': return <MotTab carId={car.id} />;
+      case 'insurance': return <InsuranceTab carId={car.id} />;
+      case 'service': return <ServiceTab carId={car.id} />;
+      case 'mileage': return <MileageTab carId={car.id} />;
+      default: return null;
+    }
   };
-
-  // Infer next due dates as one year after latest record date
-  const addOneYear = (dateStr) => {
-    if (!dateStr) return 'N/A';
-    const d = new Date(dateStr);
-    d.setFullYear(d.getFullYear() + 1);
-    return d.toISOString().slice(0, 10);
-  };
-
-  // Infer next Service type alternating Full/Partial
-  const inferNextServiceType = () => {
-    if (!serviceRecord) return 'Full';
-    return serviceRecord.serviceType === 'Full' ? 'Partial' : 'Full';
-  };
-
-  if (!car) return <p>Loading car details...</p>;
 
   return (
-    <div>
-      <h2>{car.make} {car.model} ({car.registration || 'No registration'})</h2>
-      <p><strong>Year:</strong> {car.year || 'N/A'}</p>
-      <p><strong>Value:</strong> {car.value ? `£${car.value}` : 'N/A'}</p>
-      <p><strong>Notes:</strong> {car.notes || 'None'}</p>
+    <div style={styles.overlay}>
+      <div style={styles.container}>
+        <button onClick={onClose} style={styles.closeBtn}>×</button>
 
-      <h3>Overview</h3>
-      <ul>
-        <li><strong>Next Tax Due Date:</strong> {addOneYear(carTax?.expiryDate)}</li>
-        <li><strong>Insurance Renewal Date:</strong> {addOneYear(insurance?.expiryDate)}</li>
-        <li><strong>Insurance Provider:</strong> {insurance ? findVendorName(insurance.provider) : 'N/A'}</li>
-        <li><strong>Service Due Date:</strong> {addOneYear(serviceRecord?.serviceDate)}</li>
-        <li><strong>Next Service Type:</strong> {inferNextServiceType()}</li>
-        <li><strong>Last Recorded Mileage:</strong> {lastMileage ? lastMileage.mileage : 'N/A'}</li>
-      </ul>
+        {/* Always visible Overview */}
+        <div style={styles.overview}>
+          <OverviewTab car={car} />
+        </div>
 
-      {/* TODO: add detailed sections for each (MOT, Insurance, etc) */}
+        {/* Tabs navigation without overview */}
+        <div style={styles.tabs}>
+          <nav style={styles.nav}>
+            {['mot', 'insurance', 'service', 'mileage'].map(tab => (
+              <button
+                key={tab}
+                style={{ 
+                  ...styles.tabBtn,
+                  ...(activeTab === tab ? styles.activeTabBtn : {})
+                }}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </nav>
+
+          <div style={styles.tabContent}>
+            {renderTabContent()}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
+
+const styles = {
+  overlay: {
+    position: 'fixed',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    zIndex: 10000,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '1rem',
+  },
+  container: {
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+    width: '95%',
+    maxWidth: '1200px',
+    height: '90vh',         // <-- FIXED height (static size)
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: '10px',
+    right: '10px',
+    fontSize: '2rem',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+  },
+  overview: {
+    flexShrink: 0,
+    padding: '1rem 2rem',
+    borderBottom: '1px solid #ddd',
+    maxHeight: '220px',      // Keep overview reasonably sized
+    overflowY: 'auto',       // scroll if overview content is too big
+  },
+  tabs: {
+    flexGrow: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',      // hide overflow on tabs container
+  },
+  nav: {
+    display: 'flex',
+    borderBottom: '1px solid #ccc',
+    padding: '0 1rem',
+  },
+  tabBtn: {
+    background: 'none',
+    border: 'none',
+    padding: '1rem 1.5rem',
+    cursor: 'pointer',
+    fontSize: '1rem',
+    borderBottom: '3px solid transparent',
+  },
+  activeTabBtn: {
+    borderBottomColor: '#007bff',
+    fontWeight: 'bold',
+  },
+  tabContent: {
+    flexGrow: 1,
+    padding: '1rem 2rem',
+    overflowY: 'auto',      // <-- scroll inside tab content if content too tall
+    minHeight: 0,           // Fixes flexbox overflow issue in some browsers
+  },
+};
+
+
