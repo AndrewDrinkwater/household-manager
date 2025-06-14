@@ -11,21 +11,20 @@ import {
 } from '../../api';
 
 function EntryCell({ entry, monthId, lineId, reload }) {
-  const [planned, setPlanned] = useState(entry ? entry.planned_amount : '');
-  const [actual, setActual] = useState(entry ? entry.actual_amount || '' : '');
+  const [amount, setAmount] = useState(entry ? entry.planned_amount : '');
   const [paid, setPaid] = useState(entry ? entry.is_paid : false);
+  const [editing, setEditing] = useState(false);
+  const clickTimeout = React.useRef(null);
 
   useEffect(() => {
-    setPlanned(entry ? entry.planned_amount : '');
-    setActual(entry ? entry.actual_amount || '' : '');
+    setAmount(entry ? entry.planned_amount : '');
     setPaid(entry ? entry.is_paid : false);
   }, [entry]);
 
-  const save = () => {
+  const save = (updated = {}) => {
     const data = {
-      planned_amount: planned || 0,
-      actual_amount: actual || null,
-      is_paid: paid
+      planned_amount: updated.amount !== undefined ? updated.amount : amount || 0,
+      is_paid: updated.paid !== undefined ? updated.paid : paid,
     };
     if (entry) {
       updateBudgetEntry(entry.id, data).then(reload);
@@ -34,11 +33,55 @@ function EntryCell({ entry, monthId, lineId, reload }) {
     }
   };
 
+  const handleClick = () => {
+    if (clickTimeout.current) {
+      clearTimeout(clickTimeout.current);
+      clickTimeout.current = null;
+    }
+    clickTimeout.current = setTimeout(() => {
+      const newPaid = !paid;
+      setPaid(newPaid);
+      save({ paid: newPaid });
+      clickTimeout.current = null;
+    }, 200);
+  };
+
+  const handleDoubleClick = () => {
+    if (clickTimeout.current) {
+      clearTimeout(clickTimeout.current);
+      clickTimeout.current = null;
+    }
+    setEditing(true);
+  };
+
+  const handleBlur = () => {
+    setEditing(false);
+    save({ amount });
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <input type="number" value={planned} onChange={e => setPlanned(e.target.value)} onBlur={save} style={{ marginBottom: '0.25rem' }} />
-      <input type="number" value={actual} onChange={e => setActual(e.target.value)} onBlur={save} style={{ marginBottom: '0.25rem' }} />
-      <input type="checkbox" checked={paid} onChange={e => { setPaid(e.target.checked); save(); }} />
+    <div
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
+      style={{ backgroundColor: paid ? '#d4edda' : 'transparent', cursor: 'pointer' }}
+    >
+      {editing ? (
+        <input
+          type="number"
+          value={amount}
+          autoFocus
+          onChange={e => setAmount(e.target.value)}
+          onBlur={handleBlur}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              handleBlur();
+            }
+          }}
+          style={{ width: '100%' }}
+        />
+      ) : (
+        <span>{amount || ''}</span>
+      )}
     </div>
   );
 }
@@ -103,6 +146,7 @@ export default function FinanceManager() {
     <div className="container">
       <h3>Budget</h3>
       <button className="btn btn-primary mb-2" onClick={addMonth}>Add Month</button>
+      <div style={{ overflowX: 'auto' }}>
       <table className="fixed-table">
         <thead>
           <tr>
@@ -160,6 +204,7 @@ export default function FinanceManager() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

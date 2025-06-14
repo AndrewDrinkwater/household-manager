@@ -781,8 +781,15 @@ router.get('/budget-months', async (req, res) => {
 router.post('/budget-months', async (req, res) => {
   try {
     const last = await BudgetMonth.findOne({ order: [['month', 'DESC']] });
-    let nextDate = last ? new Date(last.month + '-01') : new Date();
-    if (last) nextDate.setMonth(nextDate.getMonth() + 1);
+    let nextDate;
+    if (last) {
+      // Parse last.month in UTC to avoid timezone issues
+      const [y, m] = last.month.split('-').map(Number);
+      nextDate = new Date(Date.UTC(y, m - 1, 1));
+      nextDate.setUTCMonth(nextDate.getUTCMonth() + 1);
+    } else {
+      nextDate = new Date();
+    }
     const monthStr = nextDate.toISOString().slice(0,7);
     const month = await BudgetMonth.create({ month: monthStr });
 
