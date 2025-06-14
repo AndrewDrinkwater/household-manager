@@ -20,6 +20,11 @@ const CarTax        = require('./models/CarTax');
 const MileageRecord = require('./models/MileageRecord');
 const BacklogItem   = require('./models/BacklogItem');
 const BacklogNote   = require('./models/BacklogNote');
+const BudgetMonth   = require('./models/BudgetMonth');
+const BudgetLine    = require('./models/BudgetLine');
+const IncomeSource  = require('./models/IncomeSource');
+const SavingPot     = require('./models/SavingPot');
+const SavingEntry   = require('./models/SavingEntry');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -292,6 +297,215 @@ router.get('/backlog-items/:itemId/attachments', async (req, res) => {
   try {
     const attachments = await Attachment.findAll({ where: { BacklogItemId: req.params.itemId } });
     res.json(attachments);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --------- Budget Months ---------
+router.get('/budget-months', async (req, res) => {
+  try {
+    // Ensure months are returned in chronological order so the client
+    // can reliably determine the latest month when generating the next
+    // entry. Without ordering, Sequelize may return records in the
+    // sequence they were inserted which could lead the UI to duplicate
+    // an existing month and trigger a unique constraint error.
+    const months = await BudgetMonth.findAll({
+      order: [['month', 'ASC']],
+    });
+    res.json(months);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/budget-months', async (req, res) => {
+  try {
+    const month = await BudgetMonth.create(req.body);
+    res.status(201).json(month);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/budget-months/:id', async (req, res) => {
+  try {
+    const [updated] = await BudgetMonth.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/budget-months/:id', async (req, res) => {
+  try {
+    const deleted = await BudgetMonth.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/budget-months/:id/copy', async (req, res) => {
+  try {
+    const fromId = req.body.fromId;
+    const lines = await BudgetLine.findAll({ where: { BudgetMonthId: fromId, category: ['Bill','Variable'] } });
+    const created = await Promise.all(lines.map(l => {
+      const data = { ...l.toJSON(), id: undefined, is_paid: false, BudgetMonthId: req.params.id };
+      return BudgetLine.create(data);
+    }));
+    res.json(created);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.get('/budget-months/:monthId/lines', async (req, res) => {
+  try {
+    const lines = await BudgetLine.findAll({ where: { BudgetMonthId: req.params.monthId } });
+    res.json(lines);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/budget-months/:monthId/lines', async (req, res) => {
+  try {
+    const line = await BudgetLine.create({ ...req.body, BudgetMonthId: req.params.monthId });
+    res.status(201).json(line);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/budget-lines/:id', async (req, res) => {
+  try {
+    const [updated] = await BudgetLine.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/budget-lines/:id', async (req, res) => {
+  try {
+    const deleted = await BudgetLine.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/budget-months/:monthId/incomes', async (req, res) => {
+  try {
+    const incomes = await IncomeSource.findAll({ where: { BudgetMonthId: req.params.monthId } });
+    res.json(incomes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/budget-months/:monthId/incomes', async (req, res) => {
+  try {
+    const inc = await IncomeSource.create({ ...req.body, BudgetMonthId: req.params.monthId });
+    res.status(201).json(inc);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/income-sources/:id', async (req, res) => {
+  try {
+    const [updated] = await IncomeSource.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/income-sources/:id', async (req, res) => {
+  try {
+    const deleted = await IncomeSource.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Saving pots
+router.get('/saving-pots', async (req, res) => {
+  try { res.json(await SavingPot.findAll()); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/saving-pots', async (req, res) => {
+  try {
+    const pot = await SavingPot.create(req.body);
+    res.status(201).json(pot);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/saving-pots/:id', async (req, res) => {
+  try {
+    const [updated] = await SavingPot.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/saving-pots/:id', async (req, res) => {
+  try {
+    const deleted = await SavingPot.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/saving-pots/:potId/entries', async (req, res) => {
+  try {
+    const entries = await SavingEntry.findAll({ where: { SavingPotId: req.params.potId }, order: [['createdAt','ASC']] });
+    res.json(entries);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/saving-pots/:potId/entries', async (req, res) => {
+  try {
+    const entry = await SavingEntry.create({ ...req.body, SavingPotId: req.params.potId });
+    res.status(201).json(entry);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/saving-entries/:id', async (req, res) => {
+  try {
+    const [updated] = await SavingEntry.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/saving-entries/:id', async (req, res) => {
+  try {
+    const deleted = await SavingEntry.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

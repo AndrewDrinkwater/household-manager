@@ -16,6 +16,15 @@ require('./models/user');
 require('./models/Attachment'); // Make sure to require this!
 require('./models/BacklogItem');
 require('./models/BacklogNote');
+require('./models/BudgetMonth');
+require('./models/BudgetLine');
+require('./models/IncomeSource');
+require('./models/SavingPot');
+require('./models/SavingEntry');
+
+// Bring commonly used models into scope for route handlers
+const Service = require('./models/Service');
+const Attachment = require('./models/Attachment');
 
 const app = express();
 const PORT = process.env.PORT || 4000;

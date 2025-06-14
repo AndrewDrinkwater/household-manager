@@ -297,3 +297,32 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-light);
   margin-left: 1rem;
 }
+
+/* Budget grid */
+.budget-grid th {
+  text-align: center;
+}
+.paid-cell {
+  background: var(--success);
+  color: var(--bg);
+}
+.retired td {
+  background: #e5e5e5;
+  color: #888;
+}
+.icon-btn {
+  background: none;
+  border: none;
+  margin-left: 0.25rem;
+  cursor: pointer;
+}
+.balance {
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+.balance.red { background: var(--danger); color: #fff; }
+.balance.yellow { background: var(--warning); color: var(--blue-dark); }
+.balance.dark-green { background: #065f46; color: var(--bg); }
+.balance.green { background: var(--success); color: var(--bg); }
+.total-row td { font-weight: 600; }

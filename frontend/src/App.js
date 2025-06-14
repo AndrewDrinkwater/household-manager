@@ -11,6 +11,7 @@ import HomePage from './components/home/homePage';
 import ContractManager from './modules/contractManager/contractManager';
 import CarManager from './modules/carManager/carManager';  // new
 import BacklogManager from './modules/backlogManager/backlogManager';
+import BudgetManager from './modules/budgetManager/budgetManager';
 import UserManager from './modules/userManager/userManager';
 import ThemeToggle from './components/ui/ThemeToggle';
 
@@ -33,6 +34,12 @@ function NavTabs() {
         className={pathname.startsWith('/cars') ? 'active' : ''}
       >
         Car Management
+      </Link>
+      <Link
+        to="/budget"
+        className={pathname.startsWith('/budget') ? 'active' : ''}
+      >
+        Budgeting
       </Link>
       <Link
         to="/backlog"
@@ -61,6 +68,8 @@ function PageHeader() {
     title = 'Service Management';
   } else if (pathname.startsWith('/cars')) {
     title = 'Car Management';
+  } else if (pathname.startsWith('/budget')) {
+    title = 'Budgeting';
   } else if (pathname.startsWith('/backlog')) {
     title = 'Backlog';
   } else if (pathname === '/admin/users') {
@@ -82,8 +91,9 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/contracts/*" element={<ContractManager />} />
-          <Route path="/cars/*" element={<CarManager />} />  {/* new */}
-          <Route path="/backlog" element={<BacklogManager />} />
+        <Route path="/cars/*" element={<CarManager />} />  {/* new */}
+        <Route path="/budget/*" element={<BudgetManager />} />
+        <Route path="/backlog" element={<BacklogManager />} />
           <Route path="/admin/users" element={<UserManager />} />
         </Routes>
       </div>
