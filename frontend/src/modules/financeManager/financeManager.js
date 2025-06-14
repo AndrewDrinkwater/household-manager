@@ -147,11 +147,11 @@ export default function FinanceManager() {
       <h3>Budget</h3>
       <button className="btn btn-primary mb-2" onClick={addMonth}>Add Month</button>
       <div style={{ overflowX: 'auto' }}>
-      <table className="fixed-table">
+      <table className="finance-table">
         <thead>
           <tr>
-            <th>Line</th>
-            {months.map(m => <th key={m.id}>{m.month}</th>)}
+            <th className="line-name">Line</th>
+            {months.map(m => <th className="month-col" key={m.id}>{m.month}</th>)}
           </tr>
         </thead>
         <tbody>
@@ -160,9 +160,9 @@ export default function FinanceManager() {
           </tr>
           {incomeNames.map(name => (
             <tr key={`inc-${name}`}>
-              <td>{name}</td>
+              <td className="line-name">{name}</td>
               {months.map(m => (
-                <td key={m.id}><IncomeCell month={m} name={name} reload={load} /></td>
+                <td className="month-col" key={m.id}><IncomeCell month={m} name={name} reload={load} /></td>
               ))}
             </tr>
           ))}
@@ -171,10 +171,10 @@ export default function FinanceManager() {
           </tr>
           {bills.map(line => (
             <tr key={line.id}>
-              <td>{line.name}</td>
+              <td className="line-name">{line.name}</td>
               {months.map(m => {
                 const entry = m.BudgetEntries.find(e => e.BudgetLineId === line.id);
-                return <td key={m.id}><EntryCell entry={entry} monthId={m.id} lineId={line.id} reload={load} /></td>;
+                return <td className="month-col" key={m.id}><EntryCell entry={entry} monthId={m.id} lineId={line.id} reload={load} /></td>;
               })}
             </tr>
           ))}
@@ -183,10 +183,10 @@ export default function FinanceManager() {
           </tr>
           {variables.map(line => (
             <tr key={line.id}>
-              <td>{line.name}</td>
+              <td className="line-name">{line.name}</td>
               {months.map(m => {
                 const entry = m.BudgetEntries.find(e => e.BudgetLineId === line.id);
-                return <td key={m.id}><EntryCell entry={entry} monthId={m.id} lineId={line.id} reload={load} /></td>;
+                return <td className="month-col" key={m.id}><EntryCell entry={entry} monthId={m.id} lineId={line.id} reload={load} /></td>;
               })}
             </tr>
           ))}
@@ -195,10 +195,10 @@ export default function FinanceManager() {
           </tr>
           {annuals.map(line => (
             <tr key={line.id}>
-              <td>{line.name}</td>
+              <td className="line-name">{line.name}</td>
               {months.map(m => {
                 const entry = m.BudgetEntries.find(e => e.BudgetLineId === line.id);
-                return <td key={m.id}><EntryCell entry={entry} monthId={m.id} lineId={line.id} reload={load} /></td>;
+                return <td className="month-col" key={m.id}><EntryCell entry={entry} monthId={m.id} lineId={line.id} reload={load} /></td>;
               })}
             </tr>
           ))}
