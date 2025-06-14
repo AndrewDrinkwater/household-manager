@@ -100,7 +100,7 @@ export default function InsuranceTab({ carId, onChange }) {
                 <tr key={rec.id}>
                   <td>{vendor ? vendor.name : 'Unknown'}</td>
                   <td>{rec.policyNumber}</td>
-                  <td>{new Date(rec.expiryDate).toLocaleDateString()}</td>
+                  <td>{new Date(rec.expiryDate).toLocaleDateString('en-GB')}</td>
                   <td>{rec.cost}</td>
                   <td>{rec.notes || '-'}</td>
                   <td>

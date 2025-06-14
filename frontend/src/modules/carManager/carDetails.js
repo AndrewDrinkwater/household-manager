@@ -4,6 +4,7 @@ import OverviewTab from './tabs/OverviewTab';
 import MotTab from './tabs/MotTab';
 import InsuranceTab from './tabs/InsuranceTab';
 import ServiceTab from './tabs/ServiceTab';
+import TaxTab from './tabs/TaxTab';
 import MileageTab from './tabs/MileageTab';
 
 export default function CarDetails({ carId, onClose, onCarsUpdated }) {
@@ -35,6 +36,8 @@ export default function CarDetails({ carId, onClose, onCarsUpdated }) {
         return <InsuranceTab carId={carId} onChange={handleRecordsChange} />;
       case 'service':
         return <ServiceTab carId={carId} onChange={handleRecordsChange} />;
+      case 'tax':
+        return <TaxTab carId={carId} onChange={handleRecordsChange} />;
       case 'mileage':
         return <MileageTab carId={carId} onChange={handleRecordsChange} />;
       default:
@@ -55,7 +58,7 @@ export default function CarDetails({ carId, onClose, onCarsUpdated }) {
         {/* Tabs navigation without overview */}
         <div style={styles.tabs}>
           <nav style={styles.nav}>
-            {['mot', 'insurance', 'service', 'mileage'].map(tab => (
+            {['mot', 'insurance', 'service', 'tax', 'mileage'].map(tab => (
               <button
                 key={tab}
                 style={{ 

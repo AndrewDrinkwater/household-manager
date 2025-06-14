@@ -328,13 +328,20 @@ async function addCarSummaryData(car) {
       return d;
     };
 
+    const nextServiceType = service
+      ? service.serviceType === 'Full'
+        ? 'Partial'
+        : 'Full'
+      : null;
+
     Object.assign(result, {
       nextTaxDue: tax ? tax.expiryDate : null,
-      nextInsuranceDue: insurance ? addOneYear(insurance.expiryDate) : null,
-      insuranceProviderName: insurance && insurance.Vendor ? insurance.Vendor.name : null,
+      nextInsuranceDue: insurance ? insurance.expiryDate : null,
+      insuranceProviderName:
+        insurance && insurance.Vendor ? insurance.Vendor.name : null,
       nextMotDue: mot ? mot.expiryDate : null,
       nextServiceDue: service ? addOneYear(service.serviceDate) : null,
-      serviceType: service ? service.serviceType : null,
+      serviceType: nextServiceType,
       lastMileage: mileage ? mileage.mileage : null,
     });
   } catch (err) {
