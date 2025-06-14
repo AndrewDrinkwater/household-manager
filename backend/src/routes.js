@@ -12,12 +12,8 @@ const Service     = require('./models/Service.js');
 const User        = require('./models/user.js');
 const Attachment  = require('./models/Attachment.js');
 
-const Car         = require('./models/Car');
-const Mot         = require('./models/Mot');
-const Insurance   = require('./models/Insurance');
-const ServiceRecord = require('./models/ServiceRecord');
-const CarTax      = require('./models/CarTax');
-const MileageRecord = require('./models/MileageRecord');
+// Import carRoutes and mount on '/cars'
+const carRoutes = require('./routes/carRoutes.js');  // Adjust relative path if needed
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -300,253 +296,7 @@ function crud(path, Model, include = []) {
   });
 }
 
-// ----------------- CAR MANAGEMENT API -----------------
-
-// Cars CRUD
-router.get('/cars', async (req, res) => {
-  try {
-    const cars = await Car.findAll();
-    res.json(cars);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get('/cars/:id', async (req, res) => {
-  try {
-    const car = await Car.findByPk(req.params.id);
-    if (!car) return res.status(404).json({ error: 'Car not found' });
-    res.json(car);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.post('/cars', async (req, res) => {
-  try {
-    const newCar = await Car.create(req.body);
-    res.status(201).json(newCar);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.put('/cars/:id', async (req, res) => {
-  try {
-    const [updated] = await Car.update(req.body, { where: { id: req.params.id } });
-    if (!updated) return res.status(404).json({ error: 'Car not found' });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.delete('/cars/:id', async (req, res) => {
-  try {
-    const deleted = await Car.destroy({ where: { id: req.params.id } });
-    if (!deleted) return res.status(404).json({ error: 'Car not found' });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// MOTs for a Car
-router.get('/cars/:carId/mots', async (req, res) => {
-  try {
-    const mots = await Mot.findAll({ where: { CarId: req.params.carId } });
-    res.json(mots);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.post('/cars/:carId/mots', async (req, res) => {
-  try {
-    const mot = await Mot.create({ ...req.body, CarId: req.params.carId });
-    res.status(201).json(mot);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.put('/mots/:id', async (req, res) => {
-  try {
-    const [updated] = await Mot.update(req.body, { where: { id: req.params.id } });
-    if (!updated) return res.status(404).json({ error: 'MOT record not found' });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.delete('/mots/:id', async (req, res) => {
-  try {
-    const deleted = await Mot.destroy({ where: { id: req.params.id } });
-    if (!deleted) return res.status(404).json({ error: 'MOT record not found' });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Insurances for a Car
-router.get('/cars/:carId/insurances', async (req, res) => {
-  try {
-    const insurances = await Insurance.findAll({ where: { CarId: req.params.carId } });
-    res.json(insurances);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.post('/cars/:carId/insurances', async (req, res) => {
-  try {
-    const insurance = await Insurance.create({ ...req.body, CarId: req.params.carId });
-    res.status(201).json(insurance);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.put('/insurances/:id', async (req, res) => {
-  try {
-    const [updated] = await Insurance.update(req.body, { where: { id: req.params.id } });
-    if (!updated) return res.status(404).json({ error: 'Insurance record not found' });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.delete('/insurances/:id', async (req, res) => {
-  try {
-    const deleted = await Insurance.destroy({ where: { id: req.params.id } });
-    if (!deleted) return res.status(404).json({ error: 'Insurance record not found' });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ServiceRecords for a Car
-router.get('/cars/:carId/service-records', async (req, res) => {
-  try {
-    const records = await ServiceRecord.findAll({ where: { CarId: req.params.carId } });
-    res.json(records);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.post('/cars/:carId/service-records', async (req, res) => {
-  try {
-    const record = await ServiceRecord.create({ ...req.body, CarId: req.params.carId });
-    res.status(201).json(record);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.put('/service-records/:id', async (req, res) => {
-  try {
-    const [updated] = await ServiceRecord.update(req.body, { where: { id: req.params.id } });
-    if (!updated) return res.status(404).json({ error: 'Service record not found' });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.delete('/service-records/:id', async (req, res) => {
-  try {
-    const deleted = await ServiceRecord.destroy({ where: { id: req.params.id } });
-    if (!deleted) return res.status(404).json({ error: 'Service record not found' });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// CarTax for a Car
-router.get('/cars/:carId/cartaxes', async (req, res) => {
-  try {
-    const taxes = await CarTax.findAll({ where: { CarId: req.params.carId } });
-    res.json(taxes);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.post('/cars/:carId/cartaxes', async (req, res) => {
-  try {
-    const tax = await CarTax.create({ ...req.body, CarId: req.params.carId });
-    res.status(201).json(tax);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.put('/cartaxes/:id', async (req, res) => {
-  try {
-    const [updated] = await CarTax.update(req.body, { where: { id: req.params.id } });
-    if (!updated) return res.status(404).json({ error: 'CarTax record not found' });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.delete('/cartaxes/:id', async (req, res) => {
-  try {
-    const deleted = await CarTax.destroy({ where: { id: req.params.id } });
-    if (!deleted) return res.status(404).json({ error: 'CarTax record not found' });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// MileageRecords for a Car
-router.get('/cars/:carId/mileage-records', async (req, res) => {
-  try {
-    const records = await MileageRecord.findAll({ where: { CarId: req.params.carId } });
-    res.json(records);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.post('/cars/:carId/mileage-records', async (req, res) => {
-  try {
-    const record = await MileageRecord.create({ ...req.body, CarId: req.params.carId });
-    res.status(201).json(record);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.put('/mileage-records/:id', async (req, res) => {
-  try {
-    const [updated] = await MileageRecord.update(req.body, { where: { id: req.params.id } });
-    if (!updated) return res.status(404).json({ error: 'Mileage record not found' });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.delete('/mileage-records/:id', async (req, res) => {
-  try {
-    const deleted = await MileageRecord.destroy({ where: { id: req.params.id } });
-    if (!deleted) return res.status(404).json({ error: 'Mileage record not found' });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// --------- GENERIC CRUD for other models ---------
+// --- GENERIC CRUD for other models ---
 function crud(path, Model, include = []) {
   router.get(`/${path}`, async (req, res) => {
     try {
@@ -584,11 +334,13 @@ function crud(path, Model, include = []) {
   });
 }
 
-// Register generic CRUD routes
 crud('categories',   Category,    [Subcategory]);
 crud('subcategories',Subcategory, [Category]);
 crud('vendors',      Vendor);
 crud('services',     Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
 crud('contracts',    Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
+
+// ---- MOUNT CAR ROUTES ----
+router.use('/cars', carRoutes);
 
 module.exports = router;

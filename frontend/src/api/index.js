@@ -42,7 +42,7 @@ export const deleteContract = deleteService;
 // --- Users ---
 // CHANGE createUser endpoint to /register for safe password hashing
 export const getUsers    = () => axios.get(`${API_URL}/users`);
-export const createUser  = data => axios.post(`${API_URL}/register`, data);  // <-- Changed here
+export const createUser  = data => axios.post(`${API_URL}/register`, data);
 export const updateUser  = (id, data) => axios.put(`${API_URL}/users/${id}`, data);
 export const deleteUser  = id => axios.delete(`${API_URL}/users/${id}`);
 
@@ -70,6 +70,7 @@ export { UPLOADS_URL };
 // --- Cars ---
 export const getCars = () => axios.get(`${API_URL}/cars`);
 export const getCar = (id) => axios.get(`${API_URL}/cars/${id}`);
+export const getFullCar = (id) => axios.get(`${API_URL}/cars/${id}/full`);
 export const createCar = (data) => axios.post(`${API_URL}/cars`, data);
 export const updateCar = (id, data) => axios.put(`${API_URL}/cars/${id}`, data);
 export const deleteCar = (id) => axios.delete(`${API_URL}/cars/${id}`);

@@ -1,12 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getFullCar } from '../../api'; // Import the new full car fetch function
 import OverviewTab from './tabs/OverviewTab';
 import MotTab from './tabs/MotTab';
 import InsuranceTab from './tabs/InsuranceTab';
 import ServiceTab from './tabs/ServiceTab';
 import MileageTab from './tabs/MileageTab';
 
-export default function CarDetails({ car, onClose }) {
+export default function CarDetails({ carId, onClose }) {
+  const [car, setCar] = useState(null);
   const [activeTab, setActiveTab] = useState('mot'); // Default to first actual tab
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!carId) return;
+    setCar(null);
+    setError(null);
+    getFullCar(carId)
+      .then(res => setCar(res.data))
+      .catch(err => {
+        console.error('Error fetching full car data:', err);
+        setError('Failed to load car details');
+      });
+  }, [carId]);
+
+  if (error) return <div style={{ padding: '1rem', color: 'red' }}>{error}</div>;
+  if (!car) return <div>Loading...</div>;
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -34,7 +52,7 @@ export default function CarDetails({ car, onClose }) {
             {['mot', 'insurance', 'service', 'mileage'].map(tab => (
               <button
                 key={tab}
-                style={{ 
+                style={{
                   ...styles.tabBtn,
                   ...(activeTab === tab ? styles.activeTabBtn : {})
                 }}
@@ -120,9 +138,6 @@ const styles = {
     padding: '1rem 2rem',
     overflowY: 'auto',            // Scroll inside tab content if content too tall
     minHeight: 0,                 // Fixes flexbox overflow issue in some browsers
-    maxHeight: 'calc(90vh - 300px - 48px)', // Adjust max height based on overview height and tab nav
+    maxHeight: 'calc(90vh - 400px - 48px)', // Adjust max height based on overview height and tab nav
   },
 };
-
-
-
