@@ -515,7 +515,7 @@ router.delete('/service-records/:id', async (req, res) => {
 });
 
 // CarTax for a Car
-router.get('/cars/:carId/cartaxes', async (req, res) => {
+router.get('/cars/:carId/car-taxes', async (req, res) => {
   try {
     const taxes = await CarTax.findAll({ where: { CarId: req.params.carId } });
     res.json(taxes);
@@ -524,7 +524,7 @@ router.get('/cars/:carId/cartaxes', async (req, res) => {
   }
 });
 
-router.post('/cars/:carId/cartaxes', async (req, res) => {
+router.post('/cars/:carId/car-taxes', async (req, res) => {
   try {
     const tax = await CarTax.create({ ...req.body, CarId: req.params.carId });
     res.status(201).json(tax);
@@ -533,7 +533,7 @@ router.post('/cars/:carId/cartaxes', async (req, res) => {
   }
 });
 
-router.put('/cartaxes/:id', async (req, res) => {
+router.put('/car-taxes/:id', async (req, res) => {
   try {
     const [updated] = await CarTax.update(req.body, { where: { id: req.params.id } });
     if (!updated) return res.status(404).json({ error: 'CarTax record not found' });
@@ -543,7 +543,7 @@ router.put('/cartaxes/:id', async (req, res) => {
   }
 });
 
-router.delete('/cartaxes/:id', async (req, res) => {
+router.delete('/car-taxes/:id', async (req, res) => {
   try {
     const deleted = await CarTax.destroy({ where: { id: req.params.id } });
     if (!deleted) return res.status(404).json({ error: 'CarTax record not found' });

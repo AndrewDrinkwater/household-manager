@@ -33,10 +33,30 @@ export default function CarList({ cars, onSelectCar, selectedCarId }) {
                   {car.make} {car.model} ({car.registration || '-'})
                 </div>
                 <div style={{ fontSize: '0.9rem', marginTop: '0.3rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-                  <div><strong>Tax Due:</strong> {car.nextTaxDue || '-'}</div>
-                  <div><strong>Insurance Due:</strong> {car.nextInsuranceDue || '-'}</div>
-                  <div><strong>MOT Due:</strong> {car.nextMotDue || '-'}</div>
-                  <div><strong>Service Due:</strong> {car.nextServiceDue || '-'}</div>
+                  <div>
+                    <strong>Tax Due:</strong>{' '}
+                    {car.nextTaxDue
+                      ? new Date(car.nextTaxDue).toLocaleDateString()
+                      : 'No Data Available'}
+                  </div>
+                  <div>
+                    <strong>Insurance Due:</strong>{' '}
+                    {car.nextInsuranceDue
+                      ? new Date(car.nextInsuranceDue).toLocaleDateString()
+                      : 'No Data Available'}
+                  </div>
+                  <div>
+                    <strong>MOT Due:</strong>{' '}
+                    {car.nextMotDue
+                      ? new Date(car.nextMotDue).toLocaleDateString()
+                      : 'No Data Available'}
+                  </div>
+                  <div>
+                    <strong>Service Due:</strong>{' '}
+                    {car.nextServiceDue
+                      ? new Date(car.nextServiceDue).toLocaleDateString()
+                      : 'No Data Available'}
+                  </div>
                 </div>
               </div>
               <button
