@@ -107,6 +107,14 @@ table {
   flex-direction: column;
   gap: 0.25rem;
 }
+/* Consistent width for actions column */
+.actions-col {
+  width: 120px;
+}
+/* Make action buttons equal width */
+.action-buttons .btn {
+  width: 80px;
+}
 thead {
   background: var(--table-header);
 }

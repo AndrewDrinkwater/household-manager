@@ -86,7 +86,7 @@ export default function CategoryList() {
             <th>Name</th>
             <th>Type</th>
             <th>Parent Category</th>
-            <th>Actions</th>
+            <th className="actions-col">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -95,7 +95,7 @@ export default function CategoryList() {
               <td>{c.name}</td>
               <td>Category</td>
               <td>—</td>
-              <td>
+              <td className="actions-col">
                 <div className="action-buttons">
                   <button
                     onClick={() => openEditCategory(c)}
@@ -119,7 +119,7 @@ export default function CategoryList() {
               <td>{sc.name}</td>
               <td>Subcategory</td>
               <td>{sc.Category?.name || '—'}</td>
-              <td>
+              <td className="actions-col">
                 <div className="action-buttons">
                   <button
                     onClick={() => openEditSubcategory(sc)}

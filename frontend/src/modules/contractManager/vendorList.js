@@ -78,7 +78,7 @@ export default function VendorList() {
             <th>Name</th>
             <th>Contact Info</th>
             <th>Notes</th>
-            <th>Actions</th>
+            <th className="actions-col">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -87,7 +87,7 @@ export default function VendorList() {
               <td>{v.name}</td>
               <td>{v.contact_info}</td>
               <td>{v.notes}</td>
-              <td>
+              <td className="actions-col">
                 <div className="action-buttons">
                   <button
                     onClick={() => openEdit(v)}
