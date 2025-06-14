@@ -315,6 +315,7 @@ router.get('/budget-months', async (req, res) => {
     });
     res.json(months);
   } catch (err) {
+    console.error('Get budget months error:', err);
     res.status(500).json({ error: err.message });
   }
 });
