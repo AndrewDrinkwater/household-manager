@@ -126,3 +126,8 @@ export const getBacklogNotes = (itemId) =>
   axios.get(`${API_URL}/backlog-items/${itemId}/notes`);
 export const addBacklogNote = (itemId, text) =>
   axios.post(`${API_URL}/backlog-items/${itemId}/notes`, { text });
+
+// --- Budget Management ---
+export const getBudgetMonths = () => axios.get(`${API_URL}/budget-months`);
+export const createNextBudgetMonth = () =>
+  axios.post(`${API_URL}/budget-months/add-next`);

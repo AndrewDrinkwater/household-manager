@@ -20,6 +20,12 @@ const CarTax        = require('./models/CarTax');
 const MileageRecord = require('./models/MileageRecord');
 const BacklogItem   = require('./models/BacklogItem');
 const BacklogNote   = require('./models/BacklogNote');
+const BudgetMonth   = require('./models/BudgetMonth');
+const BudgetLine    = require('./models/BudgetLine');
+const BudgetEntry   = require('./models/BudgetEntry');
+const IncomeSource  = require('./models/IncomeSource');
+const SavingsPot    = require('./models/SavingsPot');
+const SavingsEntry  = require('./models/SavingsEntry');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -754,5 +760,50 @@ crud('subcategories',Subcategory, [Category]);
 crud('vendors',      Vendor);
 crud('services',     Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
 crud('contracts',    Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
+crud('budget-months',  BudgetMonth);
+crud('budget-lines',   BudgetLine);
+crud('budget-entries', BudgetEntry);
+crud('income-sources', IncomeSource);
+crud('savings-pots',   SavingsPot);
+crud('savings-entries',SavingsEntry);
+
+// Create next month automatically with copy logic
+router.post('/budget-months/add-next', async (req, res) => {
+  try {
+    const last = await BudgetMonth.findOne({
+      order: [['month', 'DESC']],
+      include: { model: BudgetEntry, include: BudgetLine },
+    });
+
+    let nextDate;
+    if (!last) {
+      const now = new Date();
+      now.setDate(1);
+      nextDate = now;
+    } else {
+      nextDate = new Date(last.month + '-01');
+      nextDate.setMonth(nextDate.getMonth() + 1);
+    }
+    const monthStr = nextDate.toISOString().slice(0, 7);
+    const newMonth = await BudgetMonth.create({ month: monthStr });
+
+    if (last) {
+      for (const entry of last.BudgetEntries) {
+        const line = entry.BudgetLine;
+        if (line.is_retired || line.type === 'ANNUAL') continue;
+        await BudgetEntry.create({
+          BudgetMonthId: newMonth.id,
+          BudgetLineId: line.id,
+          planned_amount: entry.planned_amount,
+        });
+      }
+    }
+
+    const created = await BudgetMonth.findByPk(newMonth.id, { include: BudgetEntry });
+    res.status(201).json(created);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;
