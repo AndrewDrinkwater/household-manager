@@ -38,7 +38,7 @@ export default function MotTab({ carId }) {
         })
         .catch(console.error);
     } else {
-      createMot({ ...record, CarId: carId })
+      createMot(carId, record)
         .then(() => {
           closeModal();
           loadRecords();
