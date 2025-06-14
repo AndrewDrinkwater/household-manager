@@ -39,9 +39,6 @@ export default function InsuranceTab({ carId }) {
   const closeModal = () => setModalOpen(false);
 
   const handleSave = (record) => {
-    // Debug: Confirm carId type
-    console.log('Saving insurance record for carId:', carId, 'record:', record);
-
     if (editingRecord) {
       updateInsurance(editingRecord.id, record)
         .then(() => {
@@ -92,7 +89,8 @@ export default function InsuranceTab({ carId }) {
           </thead>
           <tbody>
             {records.map(rec => {
-              const vendor = vendors.find(v => v.id === rec.provider);
+              // vendors and rec are in scope here, no ESLint issues
+              const vendor = vendors.find(v => v.id === Number(rec.provider));
               return (
                 <tr key={rec.id}>
                   <td>{vendor ? vendor.name : 'Unknown'}</td>
