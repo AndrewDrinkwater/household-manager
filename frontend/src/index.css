@@ -100,13 +100,14 @@ table {
 }
 .finance-table th.month-col,
 .finance-table td.month-col {
-  min-width: 45px; /* slimmer month columns */
+  min-width: 35px; /* slimmer month columns */
   white-space: nowrap;
 }
 
 .section-header th {
   background: var(--blue-mid);
   font-weight: bold;
+  color: var(--accent);
   position: sticky;
   top: 0;
   z-index: 2;
@@ -117,6 +118,28 @@ table {
   position: sticky;
   top: 0;
   z-index: 1;
+}
+
+/* Small toggle button next to line names */
+.line-toggle {
+  margin-left: 0.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+}
+
+.retired-line {
+  opacity: 0.6;
+}
+
+.disabled-cell {
+  color: var(--blue-light);
+}
+
+.add-action {
+  width: 100px;
+  margin-left: 0.5rem;
 }
 /* Stack action buttons vertically */
 .action-buttons {

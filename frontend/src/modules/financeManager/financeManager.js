@@ -6,8 +6,10 @@ import {
   createBudgetLine,
   updateBudgetEntry,
   createBudgetEntry,
+  updateBudgetLine,
   createIncomeSource,
-  updateIncomeSource
+  updateIncomeSource,
+  copyBudgetMonth
 } from '../../api';
 
 const fmt = val => new Intl.NumberFormat('en-GB', {
@@ -15,7 +17,7 @@ const fmt = val => new Intl.NumberFormat('en-GB', {
   currency: 'GBP',
 }).format(parseFloat(val || 0));
 
-function EntryCell({ entry, monthId, lineId, reload }) {
+function EntryCell({ entry, monthId, lineId, reload, disabled }) {
   const [amount, setAmount] = useState(entry ? entry.planned_amount : 0);
   const [paid, setPaid] = useState(entry ? entry.is_paid : false);
   const [editing, setEditing] = useState(false);
@@ -64,6 +66,10 @@ function EntryCell({ entry, monthId, lineId, reload }) {
     save({ amount });
   };
 
+
+  if (disabled) {
+    return <div className="disabled-cell">{fmt(amount)}</div>;
+  }
 
   return (
     <div
@@ -127,6 +133,7 @@ export default function FinanceManager() {
   useEffect(() => { load(); }, []);
 
   const addMonth = () => createBudgetMonth().then(load);
+  const copyMonth = () => copyBudgetMonth().then(load);
 
   const addLine = type => {
     const name = prompt('Line name');
@@ -143,10 +150,15 @@ export default function FinanceManager() {
     Promise.all(months.map(m => createIncomeSource({ name, amount: 0, BudgetMonthId: m.id }))).then(load);
   };
 
+  const toggleLine = line => {
+    updateBudgetLine(line.id, { is_retired: !line.is_retired }).then(load);
+  };
+
   const incomeNames = Array.from(new Set(months.flatMap(m => m.IncomeSources.map(i => i.name))));
-  const bills = lines.filter(l => l.type === 'BILL' && !l.is_retired);
-  const variables = lines.filter(l => l.type === 'VARIABLE' && !l.is_retired);
-  const annuals = lines.filter(l => l.type === 'ANNUAL' && !l.is_retired);
+  const sortLines = arr => arr.slice().sort((a, b) => a.is_retired - b.is_retired);
+  const bills = sortLines(lines.filter(l => l.type === 'BILL'));
+  const variables = sortLines(lines.filter(l => l.type === 'VARIABLE'));
+  const annuals = sortLines(lines.filter(l => l.type === 'ANNUAL'));
 
   const remainingFor = month => {
     const incomeTotal = month.IncomeSources.reduce((s, i) => s + parseFloat(i.amount || 0), 0);
@@ -164,6 +176,7 @@ export default function FinanceManager() {
     <div className="container">
       <h3>Budget</h3>
       <button className="btn btn-primary mb-2" onClick={addMonth}>Add Month</button>
+      <button className="btn btn-secondary mb-2" style={{ marginLeft: '0.5rem' }} onClick={copyMonth}>Copy Month</button>
       <div style={{ overflowX: 'auto' }}>
       <table className="finance-table">
         <thead>
@@ -180,7 +193,7 @@ export default function FinanceManager() {
         </thead>
         <tbody>
           <tr className="section-header">
-            <th colSpan={months.length + 1}>Income <button className="btn btn-sm btn-secondary" onClick={addIncomeRow}>Add Income</button></th>
+            <th colSpan={months.length + 1}>Income <button className="btn btn-sm btn-secondary add-action" onClick={addIncomeRow}>Add Income</button></th>
           </tr>
           {incomeNames.map(name => (
             <tr key={`inc-${name}`}>
@@ -191,38 +204,47 @@ export default function FinanceManager() {
             </tr>
           ))}
           <tr className="section-header">
-            <th colSpan={months.length + 1}>Bills <button className="btn btn-sm btn-secondary" onClick={() => addLine('BILL')}>Add Bill</button></th>
+            <th colSpan={months.length + 1}>Bills <button className="btn btn-sm btn-secondary add-action" onClick={() => addLine('BILL')}>Add Bill</button></th>
           </tr>
           {bills.map(line => (
-            <tr key={line.id}>
-              <td className="line-name">{line.name}</td>
+            <tr key={line.id} className={line.is_retired ? 'retired-line' : ''}>
+              <td className="line-name">
+                {line.name}
+                <button className="line-toggle" onClick={() => toggleLine(line)}>{line.is_retired ? '✔' : '✖'}</button>
+              </td>
               {months.map(m => {
                 const entry = m.BudgetEntries.find(e => e.BudgetLineId === line.id);
-                return <td className="month-col" key={m.id}><EntryCell entry={entry} monthId={m.id} lineId={line.id} reload={load} /></td>;
+                return <td className="month-col" key={m.id}><EntryCell entry={entry} monthId={m.id} lineId={line.id} reload={load} disabled={line.is_retired && (!entry || parseFloat(entry.planned_amount) === 0)} /></td>;
               })}
             </tr>
           ))}
           <tr className="section-header">
-            <th colSpan={months.length + 1}>Variable <button className="btn btn-sm btn-secondary" onClick={() => addLine('VARIABLE')}>Add Variable</button></th>
+            <th colSpan={months.length + 1}>Variables <button className="btn btn-sm btn-secondary add-action" onClick={() => addLine('VARIABLE')}>Add Variable</button></th>
           </tr>
           {variables.map(line => (
-            <tr key={line.id}>
-              <td className="line-name">{line.name}</td>
+            <tr key={line.id} className={line.is_retired ? 'retired-line' : ''}>
+              <td className="line-name">
+                {line.name}
+                <button className="line-toggle" onClick={() => toggleLine(line)}>{line.is_retired ? '✔' : '✖'}</button>
+              </td>
               {months.map(m => {
                 const entry = m.BudgetEntries.find(e => e.BudgetLineId === line.id);
-                return <td className="month-col" key={m.id}><EntryCell entry={entry} monthId={m.id} lineId={line.id} reload={load} /></td>;
+                return <td className="month-col" key={m.id}><EntryCell entry={entry} monthId={m.id} lineId={line.id} reload={load} disabled={line.is_retired && (!entry || parseFloat(entry.planned_amount) === 0)} /></td>;
               })}
             </tr>
           ))}
           <tr className="section-header">
-            <th colSpan={months.length + 1}>Annual <button className="btn btn-sm btn-secondary" onClick={() => addLine('ANNUAL')}>Add Annual</button></th>
+            <th colSpan={months.length + 1}>Annuals <button className="btn btn-sm btn-secondary add-action" onClick={() => addLine('ANNUAL')}>Add Annual</button></th>
           </tr>
           {annuals.map(line => (
-            <tr key={line.id}>
-              <td className="line-name">{line.name}</td>
+            <tr key={line.id} className={line.is_retired ? 'retired-line' : ''}>
+              <td className="line-name">
+                {line.name}
+                <button className="line-toggle" onClick={() => toggleLine(line)}>{line.is_retired ? '✔' : '✖'}</button>
+              </td>
               {months.map(m => {
                 const entry = m.BudgetEntries.find(e => e.BudgetLineId === line.id);
-                return <td className="month-col" key={m.id}><EntryCell entry={entry} monthId={m.id} lineId={line.id} reload={load} /></td>;
+                return <td className="month-col" key={m.id}><EntryCell entry={entry} monthId={m.id} lineId={line.id} reload={load} disabled={line.is_retired && (!entry || parseFloat(entry.planned_amount) === 0)} /></td>;
               })}
             </tr>
           ))}
