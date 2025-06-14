@@ -38,7 +38,7 @@ export default function TaxTab({ carId }) {
         })
         .catch(console.error);
     } else {
-      createCarTax({ ...record, CarId: carId })
+      createCarTax(carId, record)
         .then(() => {
           closeModal();
           loadRecords();

@@ -38,7 +38,7 @@ export default function ServiceTab({ carId }) {
         })
         .catch(console.error);
     } else {
-      createServiceRecord({ ...record, CarId: carId })
+      createServiceRecord(carId, record)
         .then(() => {
           closeModal();
           loadRecords();
