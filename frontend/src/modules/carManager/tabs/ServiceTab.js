@@ -81,7 +81,7 @@ export default function ServiceTab({ carId, onChange }) {
           <tbody>
             {records.map(rec => (
               <tr key={rec.id}>
-                <td>{new Date(rec.serviceDate).toLocaleDateString()}</td>
+                <td>{new Date(rec.serviceDate).toLocaleDateString('en-GB')}</td>
                 <td>{rec.mileage || '-'}</td>
                 <td>{rec.serviceType}</td>
                 <td>{rec.cost || '-'}</td>

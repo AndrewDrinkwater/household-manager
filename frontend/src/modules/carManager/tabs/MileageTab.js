@@ -78,7 +78,7 @@ export default function MileageTab({ carId, onChange }) {
           <tbody>
             {records.map(rec => (
               <tr key={rec.id}>
-                <td>{new Date(rec.recordDate).toLocaleDateString()}</td>
+                <td>{new Date(rec.recordDate).toLocaleDateString('en-GB')}</td>
                 <td>{rec.mileage}</td>
                 <td>
                   <button className="btn btn-sm btn-secondary me-2" onClick={() => openEdit(rec)}>Edit</button>

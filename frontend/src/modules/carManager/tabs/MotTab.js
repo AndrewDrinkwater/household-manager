@@ -80,8 +80,8 @@ export default function MotTab({ carId, onChange }) {
           <tbody>
             {records.map(rec => (
               <tr key={rec.id}>
-                <td>{new Date(rec.testDate).toLocaleDateString()}</td>
-                <td>{new Date(rec.expiryDate).toLocaleDateString()}</td>
+                <td>{new Date(rec.testDate).toLocaleDateString('en-GB')}</td>
+                <td>{new Date(rec.expiryDate).toLocaleDateString('en-GB')}</td>
                 <td>{rec.cost}</td>
                 <td>{rec.notes || '-'}</td>
                 <td>

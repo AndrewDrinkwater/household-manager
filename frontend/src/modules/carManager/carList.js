@@ -36,25 +36,25 @@ export default function CarList({ cars, onSelectCar, selectedCarId }) {
                   <div>
                     <strong>Tax Due:</strong>{' '}
                     {car.nextTaxDue
-                      ? new Date(car.nextTaxDue).toLocaleDateString()
+                      ? new Date(car.nextTaxDue).toLocaleDateString('en-GB')
                       : 'No Data Available'}
                   </div>
                   <div>
                     <strong>Insurance Due:</strong>{' '}
                     {car.nextInsuranceDue
-                      ? new Date(car.nextInsuranceDue).toLocaleDateString()
+                      ? new Date(car.nextInsuranceDue).toLocaleDateString('en-GB')
                       : 'No Data Available'}
                   </div>
                   <div>
                     <strong>MOT Due:</strong>{' '}
                     {car.nextMotDue
-                      ? new Date(car.nextMotDue).toLocaleDateString()
+                      ? new Date(car.nextMotDue).toLocaleDateString('en-GB')
                       : 'No Data Available'}
                   </div>
                   <div>
                     <strong>Service Due:</strong>{' '}
                     {car.nextServiceDue
-                      ? new Date(car.nextServiceDue).toLocaleDateString()
+                      ? new Date(car.nextServiceDue).toLocaleDateString('en-GB')
                       : 'No Data Available'}
                   </div>
                 </div>
