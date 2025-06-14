@@ -34,7 +34,15 @@ export default function CarManager() {
   const closeCarForm = () => setCarFormOpen(false);
 
   const saveCar = (carData) => {
-    const action = carToEdit ? updateCar(carToEdit.id, carData) : createCar(carData);
+    const sanitized = {
+      make: carData.make,
+      model: carData.model,
+      year: carData.year ? parseInt(carData.year, 10) : null,
+      registration: carData.registration,
+      value: carData.value ? parseFloat(carData.value) : null,
+      notes: carData.notes,
+    };
+    const action = carToEdit ? updateCar(carToEdit.id, sanitized) : createCar(sanitized);
     action.then(() => {
       setCarFormOpen(false);
       loadCars();

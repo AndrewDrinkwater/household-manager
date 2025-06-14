@@ -302,41 +302,46 @@ function crud(path, Model, include = []) {
 
 async function addCarSummaryData(car) {
   const carId = car.id;
+  const result = car.toJSON();
+  try {
+    const [tax, insurance, mot, service, mileage] = await Promise.all([
+      CarTax.findOne({ where: { CarId: carId }, order: [['expiryDate', 'DESC']] }),
+      Insurance.findOne({
+        where: { CarId: carId },
+        order: [['expiryDate', 'DESC']],
+        include: [{ model: Vendor, attributes: ['name'] }],
+      }),
+      Mot.findOne({ where: { CarId: carId }, order: [['expiryDate', 'DESC']] }),
+      ServiceRecord.findOne({
+        where: { CarId: carId },
+        order: [['serviceDate', 'DESC']],
+      }),
+      MileageRecord.findOne({
+        where: { CarId: carId },
+        order: [['recordDate', 'DESC']],
+      }),
+    ]);
 
-  const [tax, insurance, mot, service, mileage] = await Promise.all([
-    CarTax.findOne({ where: { CarId: carId }, order: [['expiryDate', 'DESC']] }),
-    Insurance.findOne({
-      where: { CarId: carId },
-      order: [['expiryDate', 'DESC']],
-      include: [{ model: Vendor, attributes: ['name'] }],
-    }),
-    Mot.findOne({ where: { CarId: carId }, order: [['expiryDate', 'DESC']] }),
-    ServiceRecord.findOne({
-      where: { CarId: carId },
-      order: [['serviceDate', 'DESC']],
-    }),
-    MileageRecord.findOne({
-      where: { CarId: carId },
-      order: [['recordDate', 'DESC']],
-    }),
-  ]);
+    const addOneYear = (date) => {
+      const d = new Date(date);
+      d.setFullYear(d.getFullYear() + 1);
+      return d;
+    };
 
-  const toJSON = car.toJSON();
-  const addOneYear = (date) => {
-    const d = new Date(date);
-    d.setFullYear(d.getFullYear() + 1);
-    return d;
-  };
+    Object.assign(result, {
+      nextTaxDue: tax ? tax.expiryDate : null,
+      nextInsuranceDue: insurance ? addOneYear(insurance.expiryDate) : null,
+      insuranceProviderName: insurance && insurance.Vendor ? insurance.Vendor.name : null,
+      nextMotDue: mot ? mot.expiryDate : null,
+      nextServiceDue: service ? addOneYear(service.serviceDate) : null,
+      serviceType: service ? service.serviceType : null,
+      lastMileage: mileage ? mileage.mileage : null,
+    });
+  } catch (err) {
+    console.error('addCarSummaryData error:', err);
+  }
 
-  return Object.assign(toJSON, {
-    nextTaxDue: tax ? tax.expiryDate : null,
-    nextInsuranceDue: insurance ? addOneYear(insurance.expiryDate) : null,
-    insuranceProviderName: insurance && insurance.Vendor ? insurance.Vendor.name : null,
-    nextMotDue: mot ? mot.expiryDate : null,
-    nextServiceDue: service ? addOneYear(service.serviceDate) : null,
-    serviceType: service ? service.serviceType : null,
-    lastMileage: mileage ? mileage.mileage : null,
-  });
+  return result;
 }
 
 // ----------------- CAR MANAGEMENT API -----------------
