@@ -9,6 +9,7 @@ export default function CarList({ cars, onSelectCar, selectedCarId }) {
       ) : (
         cars.map(car => {
           const isSelected = car.id === selectedCarId;
+          const isRetired = car.status === 'Retired';
           return (
             <div
               key={car.id}
@@ -24,6 +25,7 @@ export default function CarList({ cars, onSelectCar, selectedCarId }) {
                 color: 'var(--text-light)',
                 boxShadow: isSelected ? '0 0 10px var(--accent)' : 'none',
                 transition: 'background-color 0.3s ease',
+                opacity: isRetired ? 0.5 : 1,
               }}
               onMouseEnter={e => e.currentTarget.style.backgroundColor = isSelected ? 'var(--blue-mid)' : 'var(--blue-light)'}
               onMouseLeave={e => e.currentTarget.style.backgroundColor = isSelected ? 'var(--blue-mid)' : 'var(--blue-dark)'}
@@ -31,6 +33,9 @@ export default function CarList({ cars, onSelectCar, selectedCarId }) {
               <div>
                 <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
                   {car.make} {car.model} ({car.registration || '-'})
+                </div>
+                <div style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                  Status: {car.status || 'Active'}
                 </div>
                 <div style={{ fontSize: '0.9rem', marginTop: '0.3rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
                   <div>
