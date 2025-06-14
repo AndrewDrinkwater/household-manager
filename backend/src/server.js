@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const sequelize = require('./db');
 const routes = require('./routes');
 
@@ -14,12 +15,15 @@ require('./models/Frequency');
 require('./models/Service');
 require('./models/user');
 require('./models/Attachment'); // Make sure to require this!
+const { Service, Attachment } = require('./models');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 // --- Multer setup for file uploads ---
-const uploadDir = path.join(__dirname, 'uploads');
+// Store uploaded files one level up from src so they can be served statically
+const uploadDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadDir);
@@ -32,14 +36,11 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Serve uploaded files statically
-app.use('/uploads', express.static(require('path').join(__dirname, '..', 'uploads')));
+app.use('/uploads', express.static(uploadDir));
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Serve attachments
-app.use('/uploads', express.static(uploadDir));
 
 // Use your existing routes for regular API endpoints
 app.use('/api', routes);
