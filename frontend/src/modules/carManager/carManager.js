@@ -6,7 +6,7 @@ import { getCars, createCar, updateCar } from '../../api';
 
 export default function CarManager() {
   const [cars, setCars] = useState([]);
-  const [selectedCar, setSelectedCar] = useState(null);
+  const [selectedCarId, setSelectedCarId] = useState(null);
   const [carFormOpen, setCarFormOpen] = useState(false);
   const [carToEdit, setCarToEdit] = useState(null);
 
@@ -41,8 +41,8 @@ export default function CarManager() {
     }).catch(console.error);
   };
 
-  const openCarDetails = (car) => setSelectedCar(car);
-  const closeCarDetails = () => setSelectedCar(null);
+  const openCarDetails = (car) => setSelectedCarId(car.id);
+  const closeCarDetails = () => setSelectedCarId(null);
 
   return (
     <>
@@ -56,6 +56,7 @@ export default function CarManager() {
         cars={cars}
         onSelectCar={openCarDetails}
         onEditCar={openEditForm}
+        selectedCarId={selectedCarId}
       />
 
       {/* Car Add/Edit Form Modal */}
@@ -72,10 +73,10 @@ export default function CarManager() {
       )}
 
       {/* Car Details Modal */}
-      {selectedCar && (
+      {selectedCarId && (
         <div className="modal-backdrop" onClick={closeCarDetails}>
           <div className="modal-content large" onClick={e => e.stopPropagation()}>
-            <CarDetails car={selectedCar} onClose={closeCarDetails} />
+            <CarDetails carId={selectedCarId} onClose={closeCarDetails} />
           </div>
         </div>
       )}
