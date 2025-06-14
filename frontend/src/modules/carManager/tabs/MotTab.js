@@ -38,7 +38,8 @@ export default function MotTab({ carId }) {
         })
         .catch(console.error);
     } else {
-      createMot({ ...record, CarId: carId })
+      // Pass carId as a separate argument as expected by the API helper
+      createMot(carId, record)
         .then(() => {
           closeModal();
           loadRecords();

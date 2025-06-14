@@ -38,7 +38,8 @@ export default function MileageTab({ carId }) {
         })
         .catch(console.error);
     } else {
-      createMileageRecord({ ...record, CarId: carId })
+      // Pass the carId separately rather than embedding it in the record
+      createMileageRecord(carId, record)
         .then(() => {
           closeModal();
           loadRecords();

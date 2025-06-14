@@ -38,7 +38,8 @@ export default function TaxTab({ carId }) {
         })
         .catch(console.error);
     } else {
-      createCarTax({ ...record, CarId: carId })
+      // API expects carId to be provided as the first parameter
+      createCarTax(carId, record)
         .then(() => {
           closeModal();
           loadRecords();
