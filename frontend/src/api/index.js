@@ -126,3 +126,30 @@ export const getBacklogNotes = (itemId) =>
   axios.get(`${API_URL}/backlog-items/${itemId}/notes`);
 export const addBacklogNote = (itemId, text) =>
   axios.post(`${API_URL}/backlog-items/${itemId}/notes`, { text });
+
+// --- Budgeting ---
+export const getBudgetMonths = () => axios.get(`${API_URL}/budget-months`);
+export const createBudgetMonth = data => axios.post(`${API_URL}/budget-months`, data);
+export const updateBudgetMonth = (id, data) => axios.put(`${API_URL}/budget-months/${id}`, data);
+export const deleteBudgetMonth = id => axios.delete(`${API_URL}/budget-months/${id}`);
+export const copyBudgetMonth = (id, fromId) => axios.post(`${API_URL}/budget-months/${id}/copy`, { fromId });
+
+export const getBudgetLines = (monthId) => axios.get(`${API_URL}/budget-months/${monthId}/lines`);
+export const createBudgetLine = (monthId, data) => axios.post(`${API_URL}/budget-months/${monthId}/lines`, data);
+export const updateBudgetLine = (id, data) => axios.put(`${API_URL}/budget-lines/${id}`, data);
+export const deleteBudgetLine = id => axios.delete(`${API_URL}/budget-lines/${id}`);
+
+export const getIncomeSources = (monthId) => axios.get(`${API_URL}/budget-months/${monthId}/incomes`);
+export const createIncomeSource = (monthId, data) => axios.post(`${API_URL}/budget-months/${monthId}/incomes`, data);
+export const updateIncomeSource = (id, data) => axios.put(`${API_URL}/income-sources/${id}`, data);
+export const deleteIncomeSource = id => axios.delete(`${API_URL}/income-sources/${id}`);
+
+export const getSavingPots = () => axios.get(`${API_URL}/saving-pots`);
+export const createSavingPot = data => axios.post(`${API_URL}/saving-pots`, data);
+export const updateSavingPot = (id, data) => axios.put(`${API_URL}/saving-pots/${id}`, data);
+export const deleteSavingPot = id => axios.delete(`${API_URL}/saving-pots/${id}`);
+
+export const getSavingEntries = (potId) => axios.get(`${API_URL}/saving-pots/${potId}/entries`);
+export const createSavingEntry = (potId, data) => axios.post(`${API_URL}/saving-pots/${potId}/entries`, data);
+export const updateSavingEntry = (id, data) => axios.put(`${API_URL}/saving-entries/${id}`, data);
+export const deleteSavingEntry = id => axios.delete(`${API_URL}/saving-entries/${id}`);

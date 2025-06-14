@@ -12,6 +12,11 @@ const CarTax       = require('./CarTax');
 const MileageRecord= require('./MileageRecord');
 const BacklogItem  = require('./BacklogItem');
 const BacklogNote  = require('./BacklogNote');
+const BudgetMonth  = require('./BudgetMonth');
+const BudgetLine   = require('./BudgetLine');
+const IncomeSource = require('./IncomeSource');
+const SavingPot    = require('./SavingPot');
+const SavingEntry  = require('./SavingEntry');
 
 // Associations:
 Service.hasMany(Attachment, { foreignKey: 'ServiceId', onDelete: 'CASCADE' });
@@ -46,4 +51,9 @@ module.exports = {
   MileageRecord,
   BacklogItem,
   BacklogNote,
+  BudgetMonth,
+  BudgetLine,
+  IncomeSource,
+  SavingPot,
+  SavingEntry,
 };
