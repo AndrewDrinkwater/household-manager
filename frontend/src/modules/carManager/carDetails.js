@@ -70,7 +70,7 @@ const styles = {
     borderRadius: '8px',
     width: '95%',
     maxWidth: '1200px',
-    height: '90vh',         // <-- FIXED height (static size)
+    height: '90vh',         // Fixed height (static size)
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
@@ -89,14 +89,14 @@ const styles = {
     flexShrink: 0,
     padding: '1rem 2rem',
     borderBottom: '1px solid #ddd',
-    maxHeight: '220px',      // Keep overview reasonably sized
-    overflowY: 'auto',       // scroll if overview content is too big
+    maxHeight: '400px',      // Increased overview height
+    overflowY: 'auto',       // Scroll if overview content is too big
   },
   tabs: {
     flexGrow: 1,
     display: 'flex',
     flexDirection: 'column',
-    overflow: 'hidden',      // hide overflow on tabs container
+    overflow: 'hidden',      // Hide overflow on tabs container
   },
   nav: {
     display: 'flex',
@@ -118,9 +118,11 @@ const styles = {
   tabContent: {
     flexGrow: 1,
     padding: '1rem 2rem',
-    overflowY: 'auto',      // <-- scroll inside tab content if content too tall
-    minHeight: 0,           // Fixes flexbox overflow issue in some browsers
+    overflowY: 'auto',            // Scroll inside tab content if content too tall
+    minHeight: 0,                 // Fixes flexbox overflow issue in some browsers
+    maxHeight: 'calc(90vh - 300px - 48px)', // Adjust max height based on overview height and tab nav
   },
 };
+
 
 
