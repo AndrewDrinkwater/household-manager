@@ -44,7 +44,7 @@ export default function ContractList() {
             <th>Start Date</th>
             <th>Next Due</th>
             <th>Notes</th>
-            <th>Actions</th>
+            <th className="actions-col">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -57,7 +57,7 @@ export default function ContractList() {
               <td>{new Date(c.start_date).toLocaleDateString('en-GB')}</td>
               <td>{new Date(c.next_due_date).toLocaleDateString('en-GB')}</td>
               <td>{c.notes}</td>
-              <td>
+              <td className="actions-col">
                 <div className="action-buttons">
                   <button
                     onClick={() => openEdit(c)}

@@ -51,12 +51,12 @@ export default function FrequencyList() {
         New Frequency
       </button>
 
-      <table className="table-auto w-full">
+      <table className="fixed-table">
         <thead>
           <tr>
             <th className="px-4 py-2">Name</th>
             <th className="px-4 py-2">Interval Months</th>
-            <th className="px-4 py-2">Actions</th>
+            <th className="actions-col px-4 py-2">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -64,19 +64,21 @@ export default function FrequencyList() {
             <tr key={f.id}>
               <td className="border px-4 py-2">{f.name}</td>
               <td className="border px-4 py-2">{f.interval_months}</td>
-              <td className="border px-4 py-2">
-                <button
-                  onClick={() => openEdit(f)}
-                  className="btn btn-warning btn-sm mr-2"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(f.id)}
-                  className="btn btn-danger btn-sm"
-                >
-                  Delete
-                </button>
+              <td className="actions-col border px-4 py-2">
+                <div className="action-buttons">
+                  <button
+                    onClick={() => openEdit(f)}
+                    className="btn btn-warning btn-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(f.id)}
+                    className="btn btn-danger btn-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
