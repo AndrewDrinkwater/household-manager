@@ -1,10 +1,10 @@
 export default function OverviewTab({ car }) {
   if (!car) return null;
 
-  const nextTaxDue = car.nextTaxDueDate ? new Date(car.nextTaxDueDate).toLocaleDateString() : '-';
-  const insuranceRenewal = car.insuranceRenewalDate ? new Date(car.insuranceRenewalDate).toLocaleDateString() : '-';
+  const nextTaxDue = car.nextTaxDue ? new Date(car.nextTaxDue).toLocaleDateString() : '-';
+  const insuranceRenewal = car.nextInsuranceDue ? new Date(car.nextInsuranceDue).toLocaleDateString() : '-';
   const insuranceProvider = car.insuranceProviderName || '-';
-  const serviceDueDate = car.serviceDueDate ? new Date(car.serviceDueDate).toLocaleDateString() : '-';
+  const serviceDueDate = car.nextServiceDue ? new Date(car.nextServiceDue).toLocaleDateString() : '-';
   const serviceType = car.serviceType || '-';
   const lastMileage = car.lastMileage || '-';
 
