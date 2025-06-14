@@ -16,6 +16,11 @@ require('./models/user');
 require('./models/Attachment'); // Make sure to require this!
 require('./models/BacklogItem');
 require('./models/BacklogNote');
+require('./models/BudgetMonth');
+require('./models/BudgetLine');
+require('./models/IncomeSource');
+require('./models/SavingPot');
+require('./models/SavingEntry');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
