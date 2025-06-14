@@ -80,7 +80,7 @@ export default function CategoryList() {
         </button>
       </div>
 
-      <table>
+      <table className="fixed-table">
         <thead>
           <tr>
             <th>Name</th>
@@ -96,19 +96,20 @@ export default function CategoryList() {
               <td>Category</td>
               <td>—</td>
               <td>
-                <button
-                  onClick={() => openEditCategory(c)}
-                  className="btn btn-warning btn-sm"
-                  style={{ marginRight: '0.5rem' }}
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteCategoryById(c.id)}
-                  className="btn btn-danger btn-sm"
-                >
-                  Delete
-                </button>
+                <div className="action-buttons">
+                  <button
+                    onClick={() => openEditCategory(c)}
+                    className="btn btn-warning btn-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteCategoryById(c.id)}
+                    className="btn btn-danger btn-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
@@ -119,19 +120,20 @@ export default function CategoryList() {
               <td>Subcategory</td>
               <td>{sc.Category?.name || '—'}</td>
               <td>
-                <button
-                  onClick={() => openEditSubcategory(sc)}
-                  className="btn btn-warning btn-sm"
-                  style={{ marginRight: '0.5rem' }}
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteSubcategoryById(sc.id)}
-                  className="btn btn-danger btn-sm"
-                >
-                  Delete
-                </button>
+                <div className="action-buttons">
+                  <button
+                    onClick={() => openEditSubcategory(sc)}
+                    className="btn btn-warning btn-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteSubcategoryById(sc.id)}
+                    className="btn btn-danger btn-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

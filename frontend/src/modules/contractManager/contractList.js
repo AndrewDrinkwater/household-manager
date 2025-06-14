@@ -34,7 +34,7 @@ export default function ContractList() {
         New Service
       </button>
 
-      <table>
+      <table className="fixed-table">
         <thead>
           <tr>
             <th>Name</th>
@@ -58,18 +58,20 @@ export default function ContractList() {
               <td>{new Date(c.next_due_date).toLocaleDateString('en-GB')}</td>
               <td>{c.notes}</td>
               <td>
-                <button
-                  onClick={() => openEdit(c)}
-                  className="btn btn-warning btn-sm"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(c.id)}
-                  className="btn btn-danger btn-sm"
-                >
-                  Delete
-                </button>
+                <div className="action-buttons">
+                  <button
+                    onClick={() => openEdit(c)}
+                    className="btn btn-warning btn-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(c.id)}
+                    className="btn btn-danger btn-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

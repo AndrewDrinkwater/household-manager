@@ -72,7 +72,7 @@ export default function VendorList() {
         New Vendor
       </button>
 
-      <table>
+      <table className="fixed-table">
         <thead>
           <tr>
             <th>Name</th>
@@ -88,18 +88,20 @@ export default function VendorList() {
               <td>{v.contact_info}</td>
               <td>{v.notes}</td>
               <td>
-                <button
-                  onClick={() => openEdit(v)}
-                  className="btn btn-warning btn-sm"
-                >
-                  Edit
-                </button>{' '}
-                <button
-                  onClick={() => handleDelete(v.id)}
-                  className="btn btn-danger btn-sm"
-                >
-                  Delete
-                </button>
+                <div className="action-buttons">
+                  <button
+                    onClick={() => openEdit(v)}
+                    className="btn btn-warning btn-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(v.id)}
+                    className="btn btn-danger btn-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
