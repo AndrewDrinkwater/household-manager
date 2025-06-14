@@ -7,7 +7,7 @@ const Attachment = sequelize.define('Attachment', {
   originalname: { type: DataTypes.STRING, allowNull: false },
   mimetype: { type: DataTypes.STRING, allowNull: false },
   size: { type: DataTypes.INTEGER, allowNull: false }
-  // ServiceId will be set via association
+  // ServiceId/BacklogItemId will be set via association
 });
 
 module.exports = Attachment;
