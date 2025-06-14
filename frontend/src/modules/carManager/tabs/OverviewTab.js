@@ -1,12 +1,18 @@
 export default function OverviewTab({ car }) {
   if (!car) return null;
 
-  const nextTaxDue = car.nextTaxDue ? new Date(car.nextTaxDue).toLocaleDateString() : '-';
-  const insuranceRenewal = car.nextInsuranceDue ? new Date(car.nextInsuranceDue).toLocaleDateString() : '-';
-  const insuranceProvider = car.insuranceProviderName || '-';
-  const serviceDueDate = car.nextServiceDue ? new Date(car.nextServiceDue).toLocaleDateString() : '-';
-  const serviceType = car.serviceType || '-';
-  const lastMileage = car.lastMileage || '-';
+  const nextTaxDue = car.nextTaxDue
+    ? new Date(car.nextTaxDue).toLocaleDateString()
+    : 'No Data Available';
+  const insuranceRenewal = car.nextInsuranceDue
+    ? new Date(car.nextInsuranceDue).toLocaleDateString()
+    : 'No Data Available';
+  const insuranceProvider = car.insuranceProviderName || 'No Data Available';
+  const serviceDueDate = car.nextServiceDue
+    ? new Date(car.nextServiceDue).toLocaleDateString()
+    : 'No Data Available';
+  const serviceType = car.serviceType || 'No Data Available';
+  const lastMileage = car.lastMileage || 'No Data Available';
 
   return (
     <div className="modal-content p-2 mb-2" style={{ maxWidth: 'none' }}>
