@@ -12,11 +12,11 @@ const Service     = require('./models/Service.js');
 const User        = require('./models/user.js');
 const Attachment  = require('./models/Attachment.js');
 
-const Car         = require('./models/Car');
-const Mot         = require('./models/Mot');
-const Insurance   = require('./models/Insurance');
+const Car           = require('./models/Car');
+const Mot           = require('./models/Mot');
+const Insurance     = require('./models/Insurance');
 const ServiceRecord = require('./models/ServiceRecord');
-const CarTax      = require('./models/CarTax');
+const CarTax        = require('./models/CarTax');
 const MileageRecord = require('./models/MileageRecord');
 
 const jwt = require('jsonwebtoken');
@@ -300,13 +300,53 @@ function crud(path, Model, include = []) {
   });
 }
 
+async function addCarSummaryData(car) {
+  const carId = car.id;
+
+  const [tax, insurance, mot, service, mileage] = await Promise.all([
+    CarTax.findOne({ where: { CarId: carId }, order: [['expiryDate', 'DESC']] }),
+    Insurance.findOne({
+      where: { CarId: carId },
+      order: [['expiryDate', 'DESC']],
+      include: [{ model: Vendor, attributes: ['name'] }],
+    }),
+    Mot.findOne({ where: { CarId: carId }, order: [['expiryDate', 'DESC']] }),
+    ServiceRecord.findOne({
+      where: { CarId: carId },
+      order: [['serviceDate', 'DESC']],
+    }),
+    MileageRecord.findOne({
+      where: { CarId: carId },
+      order: [['recordDate', 'DESC']],
+    }),
+  ]);
+
+  const toJSON = car.toJSON();
+  const addOneYear = (date) => {
+    const d = new Date(date);
+    d.setFullYear(d.getFullYear() + 1);
+    return d;
+  };
+
+  return Object.assign(toJSON, {
+    nextTaxDue: tax ? tax.expiryDate : null,
+    nextInsuranceDue: insurance ? addOneYear(insurance.expiryDate) : null,
+    insuranceProviderName: insurance && insurance.Vendor ? insurance.Vendor.name : null,
+    nextMotDue: mot ? mot.expiryDate : null,
+    nextServiceDue: service ? addOneYear(service.serviceDate) : null,
+    serviceType: service ? service.serviceType : null,
+    lastMileage: mileage ? mileage.mileage : null,
+  });
+}
+
 // ----------------- CAR MANAGEMENT API -----------------
 
 // Cars CRUD
 router.get('/cars', async (req, res) => {
   try {
     const cars = await Car.findAll();
-    res.json(cars);
+    const enriched = await Promise.all(cars.map(addCarSummaryData));
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -316,7 +356,8 @@ router.get('/cars/:id', async (req, res) => {
   try {
     const car = await Car.findByPk(req.params.id);
     if (!car) return res.status(404).json({ error: 'Car not found' });
-    res.json(car);
+    const enriched = await addCarSummaryData(car);
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
