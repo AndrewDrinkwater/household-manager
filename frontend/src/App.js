@@ -92,7 +92,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/contracts/*" element={<ContractManager />} />
         <Route path="/cars/*" element={<CarManager />} />  {/* new */}
-        <Route path="/budget" element={<BudgetManager />} />
+        <Route path="/budget/*" element={<BudgetManager />} />
         <Route path="/backlog" element={<BacklogManager />} />
           <Route path="/admin/users" element={<UserManager />} />
         </Routes>

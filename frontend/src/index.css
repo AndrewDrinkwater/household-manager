@@ -297,3 +297,12 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-light);
   margin-left: 1rem;
 }
+
+/* Budget grid */
+.budget-grid th {
+  text-align: center;
+}
+.paid-cell {
+  background: var(--success);
+  color: var(--bg);
+}
