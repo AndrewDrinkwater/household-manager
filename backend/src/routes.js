@@ -818,6 +818,59 @@ router.post('/budget-months', async (req, res) => {
   }
 });
 
+router.post('/budget-months/copy', async (req, res) => {
+  try {
+    const last = await BudgetMonth.findOne({
+      order: [['month', 'DESC']],
+      include: [
+        { model: BudgetEntry, include: [BudgetLine] },
+        IncomeSource,
+      ],
+    });
+    let nextDate;
+    if (last) {
+      const [y, m] = last.month.split('-').map(Number);
+      nextDate = new Date(Date.UTC(y, m - 1, 1));
+      nextDate.setUTCMonth(nextDate.getUTCMonth() + 1);
+    } else {
+      nextDate = new Date();
+    }
+    const monthStr = nextDate.toISOString().slice(0,7);
+    const month = await BudgetMonth.create({ month: monthStr });
+
+    if (last) {
+      for (const entry of last.BudgetEntries) {
+        const line = entry.BudgetLine;
+        if (!line.is_retired && line.type !== 'ANNUAL') {
+          await BudgetEntry.create({
+            BudgetMonthId: month.id,
+            BudgetLineId: line.id,
+            planned_amount: entry.planned_amount,
+          });
+        }
+      }
+      for (const src of last.IncomeSources) {
+        await IncomeSource.create({
+          name: src.name,
+          amount: src.amount,
+          BudgetMonthId: month.id,
+        });
+      }
+    }
+
+    const created = await BudgetMonth.findByPk(month.id, {
+      include: [
+        { model: BudgetEntry, include: [BudgetLine] },
+        IncomeSource,
+        { model: SavingsEntry, include: [SavingsPot] },
+      ],
+    });
+    res.status(201).json(created);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 crud('budget-lines', BudgetLine);
 crud('budget-entries', BudgetEntry);
 crud('income-sources', IncomeSource);

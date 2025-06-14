@@ -129,6 +129,7 @@ export const addBacklogNote = (itemId, text) =>
 // --- Budget Module ---
 export const getBudgetMonths = () => axios.get(`${API_URL}/budget-months`);
 export const createBudgetMonth = () => axios.post(`${API_URL}/budget-months`);
+export const copyBudgetMonth = () => axios.post(`${API_URL}/budget-months/copy`);
 
 export const getBudgetLines = () => axios.get(`${API_URL}/budget-lines`);
 export const createBudgetLine = data => axios.post(`${API_URL}/budget-lines`, data);
