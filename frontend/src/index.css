@@ -8,6 +8,8 @@
   --accent:         #1e90ff;
   --danger:         #d32f2f;
   --warning:        #f9a825;
+  --success:        #4caf50;
+  --caution:        #ffb300;
   --text-light:     #f1f5f9;
   --bg:             #0a182e;
   /* Table-specific */
@@ -210,3 +212,29 @@ input:focus, select:focus, textarea:focus {
   border-bottom: 2px solid var(--accent);
   padding-bottom: 0.25rem;
 }
+
+/* Dashboard Overview */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pill {
+  background: var(--blue-dark);
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.pill span {
+  font-size: 0.9rem;
+}
+
+.pill.green  { background: var(--success); color: var(--bg); }
+.pill.yellow { background: var(--warning); color: var(--blue-dark); }
+.pill.amber  { background: var(--caution); color: var(--blue-dark); }
+.pill.red    { background: var(--danger); color: #fff; }
