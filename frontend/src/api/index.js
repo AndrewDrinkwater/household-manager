@@ -66,3 +66,40 @@ export const deleteAttachment = (attachmentId) =>
 
 // Expose the base uploads URL for image/file preview/download
 export { UPLOADS_URL };
+
+// --- Cars ---
+export const getCars = () => axios.get(`${API_URL}/cars`);
+export const getCar = (id) => axios.get(`${API_URL}/cars/${id}`);
+export const createCar = (data) => axios.post(`${API_URL}/cars`, data);
+export const updateCar = (id, data) => axios.put(`${API_URL}/cars/${id}`, data);
+export const deleteCar = (id) => axios.delete(`${API_URL}/cars/${id}`);
+
+// --- MOTs ---
+export const getMots = (carId) => axios.get(`${API_URL}/cars/${carId}/mots`);
+export const createMot = (carId, data) => axios.post(`${API_URL}/cars/${carId}/mots`, data);
+export const updateMot = (id, data) => axios.put(`${API_URL}/mots/${id}`, data);
+export const deleteMot = (id) => axios.delete(`${API_URL}/mots/${id}`);
+
+// --- Insurances ---
+export const getInsurances = (carId) => axios.get(`${API_URL}/cars/${carId}/insurances`);
+export const createInsurance = (carId, data) => axios.post(`${API_URL}/cars/${carId}/insurances`, data);
+export const updateInsurance = (id, data) => axios.put(`${API_URL}/insurances/${id}`, data);
+export const deleteInsurance = (id) => axios.delete(`${API_URL}/insurances/${id}`);
+
+// --- ServiceRecords ---
+export const getServiceRecords = (carId) => axios.get(`${API_URL}/cars/${carId}/service-records`);
+export const createServiceRecord = (carId, data) => axios.post(`${API_URL}/cars/${carId}/service-records`, data);
+export const updateServiceRecord = (id, data) => axios.put(`${API_URL}/service-records/${id}`, data);
+export const deleteServiceRecord = (id) => axios.delete(`${API_URL}/service-records/${id}`);
+
+// --- CarTaxes ---
+export const getCarTaxes = (carId) => axios.get(`${API_URL}/cars/${carId}/cartaxes`);
+export const createCarTax = (carId, data) => axios.post(`${API_URL}/cars/${carId}/cartaxes`, data);
+export const updateCarTax = (id, data) => axios.put(`${API_URL}/cartaxes/${id}`, data);
+export const deleteCarTax = (id) => axios.delete(`${API_URL}/cartaxes/${id}`);
+
+// --- MileageRecords ---
+export const getMileageRecords = (carId) => axios.get(`${API_URL}/cars/${carId}/mileage-records`);
+export const createMileageRecord = (carId, data) => axios.post(`${API_URL}/cars/${carId}/mileage-records`, data);
+export const updateMileageRecord = (id, data) => axios.put(`${API_URL}/mileage-records/${id}`, data);
+export const deleteMileageRecord = (id) => axios.delete(`${API_URL}/mileage-records/${id}`);

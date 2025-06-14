@@ -3,7 +3,13 @@ const Attachment = require('./Attachment');
 const Vendor = require('./vendor');
 const Subcategory = require('./Subcategory');
 const Frequency = require('./Frequency');
-const User = require('./user');  // <--- ADD THIS LINE
+const User = require('./user');
+const Car          = require('./Car');
+const Mot          = require('./Mot');
+const Insurance    = require('./Insurance');
+const ServiceRecord= require('./ServiceRecord');
+const CarTax       = require('./CarTax');
+const MileageRecord= require('./MileageRecord');
 
 // Associations:
 Service.hasMany(Attachment, { foreignKey: 'ServiceId', onDelete: 'CASCADE' });
@@ -24,5 +30,11 @@ module.exports = {
   Vendor,
   Subcategory,
   Frequency,
-  User,    // <--- EXPORT USER HERE
+  User,
+  Car,
+  Mot,
+  Insurance,
+  ServiceRecord,
+  CarTax,
+  MileageRecord,
 };

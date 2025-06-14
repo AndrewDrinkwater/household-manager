@@ -12,15 +12,22 @@ const Service     = require('./models/Service.js');
 const User        = require('./models/user.js');
 const Attachment  = require('./models/Attachment.js');
 
+const Car         = require('./models/Car');
+const Mot         = require('./models/Mot');
+const Insurance   = require('./models/Insurance');
+const ServiceRecord = require('./models/ServiceRecord');
+const CarTax      = require('./models/CarTax');
+const MileageRecord = require('./models/MileageRecord');
+
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// LOGIN ROUTE
+// ----------------- LOGIN -----------------
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  console.log('Login attempt:', { username }); 
+  console.log('Login attempt:', { username });
 
   if (!username || !password) {
     console.log('Missing username or password');
@@ -52,7 +59,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// USER REGISTRATION
+// ------------- USER REGISTRATION -------------
 router.post('/register', async (req, res) => {
   const { username, email, password, role } = req.body;
 
@@ -85,14 +92,14 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// USER UPDATE (with password hashing if password present)
+// ------------- USER UPDATE -------------
 router.put('/users/:id', async (req, res) => {
   try {
     const updateData = { ...req.body };
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 10);
     } else {
-      delete updateData.password; // do not overwrite password if not provided
+      delete updateData.password;
     }
 
     const [updated] = await User.update(updateData, { where: { id: req.params.id } });
@@ -103,7 +110,7 @@ router.put('/users/:id', async (req, res) => {
   }
 });
 
-// --- MULTER SETUP for file upload ---
+// --------- MULTER FILE UPLOAD SETUP ---------
 const UPLOAD_DIR = path.join(__dirname, '../uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
 
@@ -120,7 +127,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// POST /api/services/:serviceId/attachments
+// --- Attachments ---
 router.post('/services/:serviceId/attachments', upload.single('file'), async (req, res) => {
   try {
     const { serviceId } = req.params;
@@ -141,7 +148,6 @@ router.post('/services/:serviceId/attachments', upload.single('file'), async (re
   }
 });
 
-// GET /api/services/:serviceId/attachments
 router.get('/services/:serviceId/attachments', async (req, res) => {
   try {
     const { serviceId } = req.params;
@@ -152,7 +158,6 @@ router.get('/services/:serviceId/attachments', async (req, res) => {
   }
 });
 
-// DELETE /api/attachments/:id
 router.delete('/attachments/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -169,7 +174,6 @@ router.delete('/attachments/:id', async (req, res) => {
   }
 });
 
-// Optional: serve attachments (for download)
 router.get('/attachments/download/:id', async (req, res) => {
   try {
     const attachment = await Attachment.findByPk(req.params.id);
@@ -182,7 +186,7 @@ router.get('/attachments/download/:id', async (req, res) => {
   }
 });
 
-/** --- FREQUENCIES (explicit handlers) --- **/
+// --------- Frequencies CRUD (explicit handlers) ---------
 router.get('/frequencies', async (req, res) => {
   try { res.json(await Frequency.findAll()); }
   catch (err) { res.status(500).json({ error: err.message }); }
@@ -234,7 +238,31 @@ router.delete('/frequencies/:id', async (req, res) => {
   }
 });
 
-/** --- GENERIC CRUD for other models --- **/
+// --------- Users GET & DELETE ---------
+router.get('/users', async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: { exclude: ['password'] },
+    });
+    res.json(users);
+  } catch (err) {
+    console.error('Get users error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const deleted = await User.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'User not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    console.error('Delete user error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// -------------- GENERIC CRUD --------------
 function crud(path, Model, include = []) {
   router.get(`/${path}`, async (req, res) => {
     try {
@@ -272,37 +300,295 @@ function crud(path, Model, include = []) {
   });
 }
 
-// Add this to your routes.js
+// ----------------- CAR MANAGEMENT API -----------------
 
-router.get('/users', async (req, res) => {
+// Cars CRUD
+router.get('/cars', async (req, res) => {
   try {
-    const users = await User.findAll({
-      attributes: { exclude: ['password'] },  // exclude passwords from response
-    });
-    res.json(users);
+    const cars = await Car.findAll();
+    res.json(cars);
   } catch (err) {
-    console.error('Get users error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: err.message });
   }
 });
 
-router.delete('/users/:id', async (req, res) => {
+router.get('/cars/:id', async (req, res) => {
   try {
-    const deleted = await User.destroy({ where: { id: req.params.id } });
-    if (!deleted) return res.status(404).json({ error: 'User not found' });
+    const car = await Car.findByPk(req.params.id);
+    if (!car) return res.status(404).json({ error: 'Car not found' });
+    res.json(car);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/cars', async (req, res) => {
+  try {
+    const newCar = await Car.create(req.body);
+    res.status(201).json(newCar);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/cars/:id', async (req, res) => {
+  try {
+    const [updated] = await Car.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Car not found' });
     res.sendStatus(204);
   } catch (err) {
-    console.error('Delete user error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(400).json({ error: err.message });
   }
 });
 
+router.delete('/cars/:id', async (req, res) => {
+  try {
+    const deleted = await Car.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Car not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
+// MOTs for a Car
+router.get('/cars/:carId/mots', async (req, res) => {
+  try {
+    const mots = await Mot.findAll({ where: { CarId: req.params.carId } });
+    res.json(mots);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/cars/:carId/mots', async (req, res) => {
+  try {
+    const mot = await Mot.create({ ...req.body, CarId: req.params.carId });
+    res.status(201).json(mot);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/mots/:id', async (req, res) => {
+  try {
+    const [updated] = await Mot.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'MOT record not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/mots/:id', async (req, res) => {
+  try {
+    const deleted = await Mot.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'MOT record not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Insurances for a Car
+router.get('/cars/:carId/insurances', async (req, res) => {
+  try {
+    const insurances = await Insurance.findAll({ where: { CarId: req.params.carId } });
+    res.json(insurances);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/cars/:carId/insurances', async (req, res) => {
+  try {
+    const insurance = await Insurance.create({ ...req.body, CarId: req.params.carId });
+    res.status(201).json(insurance);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/insurances/:id', async (req, res) => {
+  try {
+    const [updated] = await Insurance.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Insurance record not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/insurances/:id', async (req, res) => {
+  try {
+    const deleted = await Insurance.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Insurance record not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ServiceRecords for a Car
+router.get('/cars/:carId/service-records', async (req, res) => {
+  try {
+    const records = await ServiceRecord.findAll({ where: { CarId: req.params.carId } });
+    res.json(records);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/cars/:carId/service-records', async (req, res) => {
+  try {
+    const record = await ServiceRecord.create({ ...req.body, CarId: req.params.carId });
+    res.status(201).json(record);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/service-records/:id', async (req, res) => {
+  try {
+    const [updated] = await ServiceRecord.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Service record not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/service-records/:id', async (req, res) => {
+  try {
+    const deleted = await ServiceRecord.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Service record not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// CarTax for a Car
+router.get('/cars/:carId/cartaxes', async (req, res) => {
+  try {
+    const taxes = await CarTax.findAll({ where: { CarId: req.params.carId } });
+    res.json(taxes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/cars/:carId/cartaxes', async (req, res) => {
+  try {
+    const tax = await CarTax.create({ ...req.body, CarId: req.params.carId });
+    res.status(201).json(tax);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/cartaxes/:id', async (req, res) => {
+  try {
+    const [updated] = await CarTax.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'CarTax record not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/cartaxes/:id', async (req, res) => {
+  try {
+    const deleted = await CarTax.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'CarTax record not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// MileageRecords for a Car
+router.get('/cars/:carId/mileage-records', async (req, res) => {
+  try {
+    const records = await MileageRecord.findAll({ where: { CarId: req.params.carId } });
+    res.json(records);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/cars/:carId/mileage-records', async (req, res) => {
+  try {
+    const record = await MileageRecord.create({ ...req.body, CarId: req.params.carId });
+    res.status(201).json(record);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/mileage-records/:id', async (req, res) => {
+  try {
+    const [updated] = await MileageRecord.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Mileage record not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/mileage-records/:id', async (req, res) => {
+  try {
+    const deleted = await MileageRecord.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Mileage record not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --------- GENERIC CRUD for other models ---------
+function crud(path, Model, include = []) {
+  router.get(`/${path}`, async (req, res) => {
+    try {
+      const items = await Model.findAll({ include });
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+  router.post(`/${path}`, async (req, res) => {
+    try {
+      const inst = await Model.create(req.body);
+      res.status(201).json(inst);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+  router.put(`/${path}/:id`, async (req, res) => {
+    try {
+      const [updated] = await Model.update(req.body, { where: { id: req.params.id } });
+      if (!updated) return res.status(404).json({ error: 'Not found' });
+      res.sendStatus(204);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+  router.delete(`/${path}/:id`, async (req, res) => {
+    try {
+      const deleted = await Model.destroy({ where: { id: req.params.id } });
+      if (!deleted) return res.status(404).json({ error: 'Not found' });
+      res.sendStatus(204);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+}
+
+// Register generic CRUD routes
 crud('categories',   Category,    [Subcategory]);
 crud('subcategories',Subcategory, [Category]);
 crud('vendors',      Vendor);
 crud('services',     Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
 crud('contracts',    Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
-// Removed generic crud('users', User) to avoid unsafe user creation
 
 module.exports = router;
