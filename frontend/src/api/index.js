@@ -136,6 +136,7 @@ export const updateBudgetLine = (id, data) => axios.put(`${API_URL}/budget-lines
 export const deleteBudgetLine = id => axios.delete(`${API_URL}/budget-lines/${id}`);
 
 export const updateBudgetEntry = (id, data) => axios.put(`${API_URL}/budget-entries/${id}`, data);
+export const createBudgetEntry = data => axios.post(`${API_URL}/budget-entries`, data);
 
 export const createIncomeSource = data => axios.post(`${API_URL}/income-sources`, data);
 export const updateIncomeSource = (id, data) => axios.put(`${API_URL}/income-sources/${id}`, data);
