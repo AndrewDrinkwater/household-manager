@@ -300,48 +300,50 @@ function crud(path, Model, include = []) {
   });
 }
 
+async function computeCarSummary(carId) {
+  const [tax, insurance, mot, service, mileage] = await Promise.all([
+    CarTax.findOne({ where: { CarId: carId }, order: [['expiryDate', 'DESC']] }),
+    Insurance.findOne({
+      where: { CarId: carId },
+      order: [['expiryDate', 'DESC']],
+      include: [{ model: Vendor, attributes: ['name'] }],
+    }),
+    Mot.findOne({ where: { CarId: carId }, order: [['expiryDate', 'DESC']] }),
+    ServiceRecord.findOne({
+      where: { CarId: carId },
+      order: [['serviceDate', 'DESC']],
+    }),
+    MileageRecord.findOne({
+      where: { CarId: carId },
+      order: [['recordDate', 'DESC']],
+    }),
+  ]);
+
+  const addOneYear = (date) => {
+    const d = new Date(date);
+    d.setFullYear(d.getFullYear() + 1);
+    return d;
+  };
+
+  return {
+    nextTaxDue: tax ? tax.expiryDate : null,
+    nextInsuranceDue: insurance ? addOneYear(insurance.expiryDate) : null,
+    insuranceProviderName: insurance && insurance.Vendor ? insurance.Vendor.name : null,
+    nextMotDue: mot ? mot.expiryDate : null,
+    nextServiceDue: service ? addOneYear(service.serviceDate) : null,
+    serviceType: service ? service.serviceType : null,
+    lastMileage: mileage ? mileage.mileage : null,
+  };
+}
+
 async function addCarSummaryData(car) {
-  const carId = car.id;
-  const result = car.toJSON();
-  try {
-    const [tax, insurance, mot, service, mileage] = await Promise.all([
-      CarTax.findOne({ where: { CarId: carId }, order: [['expiryDate', 'DESC']] }),
-      Insurance.findOne({
-        where: { CarId: carId },
-        order: [['expiryDate', 'DESC']],
-        include: [{ model: Vendor, attributes: ['name'] }],
-      }),
-      Mot.findOne({ where: { CarId: carId }, order: [['expiryDate', 'DESC']] }),
-      ServiceRecord.findOne({
-        where: { CarId: carId },
-        order: [['serviceDate', 'DESC']],
-      }),
-      MileageRecord.findOne({
-        where: { CarId: carId },
-        order: [['recordDate', 'DESC']],
-      }),
-    ]);
+  const summary = await computeCarSummary(car.id);
+  return Object.assign(car.toJSON(), summary);
+}
 
-    const addOneYear = (date) => {
-      const d = new Date(date);
-      d.setFullYear(d.getFullYear() + 1);
-      return d;
-    };
-
-    Object.assign(result, {
-      nextTaxDue: tax ? tax.expiryDate : null,
-      nextInsuranceDue: insurance ? addOneYear(insurance.expiryDate) : null,
-      insuranceProviderName: insurance && insurance.Vendor ? insurance.Vendor.name : null,
-      nextMotDue: mot ? mot.expiryDate : null,
-      nextServiceDue: service ? addOneYear(service.serviceDate) : null,
-      serviceType: service ? service.serviceType : null,
-      lastMileage: mileage ? mileage.mileage : null,
-    });
-  } catch (err) {
-    console.error('addCarSummaryData error:', err);
-  }
-
-  return result;
+async function updateCarSummary(carId) {
+  const summary = await computeCarSummary(carId);
+  await Car.update(summary, { where: { id: carId } });
 }
 
 // ----------------- CAR MANAGEMENT API -----------------
@@ -371,6 +373,7 @@ router.get('/cars/:id', async (req, res) => {
 router.post('/cars', async (req, res) => {
   try {
     const newCar = await Car.create(req.body);
+    await updateCarSummary(newCar.id);
     res.status(201).json(newCar);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -381,6 +384,7 @@ router.put('/cars/:id', async (req, res) => {
   try {
     const [updated] = await Car.update(req.body, { where: { id: req.params.id } });
     if (!updated) return res.status(404).json({ error: 'Car not found' });
+    await updateCarSummary(req.params.id);
     res.sendStatus(204);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -410,6 +414,7 @@ router.get('/cars/:carId/mots', async (req, res) => {
 router.post('/cars/:carId/mots', async (req, res) => {
   try {
     const mot = await Mot.create({ ...req.body, CarId: req.params.carId });
+    await updateCarSummary(req.params.carId);
     res.status(201).json(mot);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -420,6 +425,8 @@ router.put('/mots/:id', async (req, res) => {
   try {
     const [updated] = await Mot.update(req.body, { where: { id: req.params.id } });
     if (!updated) return res.status(404).json({ error: 'MOT record not found' });
+    const record = await Mot.findByPk(req.params.id);
+    if (record) await updateCarSummary(record.CarId);
     res.sendStatus(204);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -428,8 +435,10 @@ router.put('/mots/:id', async (req, res) => {
 
 router.delete('/mots/:id', async (req, res) => {
   try {
+    const record = await Mot.findByPk(req.params.id);
     const deleted = await Mot.destroy({ where: { id: req.params.id } });
     if (!deleted) return res.status(404).json({ error: 'MOT record not found' });
+    if (record) await updateCarSummary(record.CarId);
     res.sendStatus(204);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -449,6 +458,7 @@ router.get('/cars/:carId/insurances', async (req, res) => {
 router.post('/cars/:carId/insurances', async (req, res) => {
   try {
     const insurance = await Insurance.create({ ...req.body, CarId: req.params.carId });
+    await updateCarSummary(req.params.carId);
     res.status(201).json(insurance);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -459,6 +469,8 @@ router.put('/insurances/:id', async (req, res) => {
   try {
     const [updated] = await Insurance.update(req.body, { where: { id: req.params.id } });
     if (!updated) return res.status(404).json({ error: 'Insurance record not found' });
+    const record = await Insurance.findByPk(req.params.id);
+    if (record) await updateCarSummary(record.CarId);
     res.sendStatus(204);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -467,8 +479,10 @@ router.put('/insurances/:id', async (req, res) => {
 
 router.delete('/insurances/:id', async (req, res) => {
   try {
+    const record = await Insurance.findByPk(req.params.id);
     const deleted = await Insurance.destroy({ where: { id: req.params.id } });
     if (!deleted) return res.status(404).json({ error: 'Insurance record not found' });
+    if (record) await updateCarSummary(record.CarId);
     res.sendStatus(204);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -488,6 +502,7 @@ router.get('/cars/:carId/service-records', async (req, res) => {
 router.post('/cars/:carId/service-records', async (req, res) => {
   try {
     const record = await ServiceRecord.create({ ...req.body, CarId: req.params.carId });
+    await updateCarSummary(req.params.carId);
     res.status(201).json(record);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -498,6 +513,8 @@ router.put('/service-records/:id', async (req, res) => {
   try {
     const [updated] = await ServiceRecord.update(req.body, { where: { id: req.params.id } });
     if (!updated) return res.status(404).json({ error: 'Service record not found' });
+    const record = await ServiceRecord.findByPk(req.params.id);
+    if (record) await updateCarSummary(record.CarId);
     res.sendStatus(204);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -506,8 +523,10 @@ router.put('/service-records/:id', async (req, res) => {
 
 router.delete('/service-records/:id', async (req, res) => {
   try {
+    const record = await ServiceRecord.findByPk(req.params.id);
     const deleted = await ServiceRecord.destroy({ where: { id: req.params.id } });
     if (!deleted) return res.status(404).json({ error: 'Service record not found' });
+    if (record) await updateCarSummary(record.CarId);
     res.sendStatus(204);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -527,6 +546,7 @@ router.get('/cars/:carId/car-taxes', async (req, res) => {
 router.post('/cars/:carId/car-taxes', async (req, res) => {
   try {
     const tax = await CarTax.create({ ...req.body, CarId: req.params.carId });
+    await updateCarSummary(req.params.carId);
     res.status(201).json(tax);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -537,6 +557,8 @@ router.put('/car-taxes/:id', async (req, res) => {
   try {
     const [updated] = await CarTax.update(req.body, { where: { id: req.params.id } });
     if (!updated) return res.status(404).json({ error: 'CarTax record not found' });
+    const record = await CarTax.findByPk(req.params.id);
+    if (record) await updateCarSummary(record.CarId);
     res.sendStatus(204);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -545,8 +567,10 @@ router.put('/car-taxes/:id', async (req, res) => {
 
 router.delete('/car-taxes/:id', async (req, res) => {
   try {
+    const record = await CarTax.findByPk(req.params.id);
     const deleted = await CarTax.destroy({ where: { id: req.params.id } });
     if (!deleted) return res.status(404).json({ error: 'CarTax record not found' });
+    if (record) await updateCarSummary(record.CarId);
     res.sendStatus(204);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -566,6 +590,7 @@ router.get('/cars/:carId/mileage-records', async (req, res) => {
 router.post('/cars/:carId/mileage-records', async (req, res) => {
   try {
     const record = await MileageRecord.create({ ...req.body, CarId: req.params.carId });
+    await updateCarSummary(req.params.carId);
     res.status(201).json(record);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -576,6 +601,8 @@ router.put('/mileage-records/:id', async (req, res) => {
   try {
     const [updated] = await MileageRecord.update(req.body, { where: { id: req.params.id } });
     if (!updated) return res.status(404).json({ error: 'Mileage record not found' });
+    const record = await MileageRecord.findByPk(req.params.id);
+    if (record) await updateCarSummary(record.CarId);
     res.sendStatus(204);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -584,8 +611,10 @@ router.put('/mileage-records/:id', async (req, res) => {
 
 router.delete('/mileage-records/:id', async (req, res) => {
   try {
+    const record = await MileageRecord.findByPk(req.params.id);
     const deleted = await MileageRecord.destroy({ where: { id: req.params.id } });
     if (!deleted) return res.status(404).json({ error: 'Mileage record not found' });
+    if (record) await updateCarSummary(record.CarId);
     res.sendStatus(204);
   } catch (err) {
     res.status(500).json({ error: err.message });
