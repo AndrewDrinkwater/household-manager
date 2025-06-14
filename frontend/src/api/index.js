@@ -40,7 +40,7 @@ export const updateContract = updateService;
 export const deleteContract = deleteService;
 
 // --- Users ---
-// CHANGE createUser endpoint to /register for safe password hashing
+// createUser uses the /register endpoint for secure password hashing
 export const getUsers    = () => axios.get(`${API_URL}/users`);
 export const createUser  = data => axios.post(`${API_URL}/register`, data);
 export const updateUser  = (id, data) => axios.put(`${API_URL}/users/${id}`, data);
