@@ -12,14 +12,16 @@ import ContractManager from './modules/contractManager/contractManager';
 import CarManager from './modules/carManager/carManager';  // new
 import BacklogManager from './modules/backlogManager/backlogManager';
 import UserManager from './modules/userManager/userManager';
+import ThemeToggle from './components/ui/ThemeToggle';
 
 function NavTabs() {
   const { pathname } = useLocation();
   return (
     <div className="nav-tabs">
-      <Link to="/" className={pathname === '/' ? 'active' : ''}>
-        Home
-      </Link>
+      <div className="nav-links">
+        <Link to="/" className={pathname === '/' ? 'active' : ''}>
+          Home
+        </Link>
       <Link
         to="/contracts"
         className={pathname.startsWith('/contracts') ? 'active' : ''}
@@ -44,6 +46,8 @@ function NavTabs() {
       >
         User Management
       </Link>
+      </div>
+      <ThemeToggle />
     </div>
   );
 }

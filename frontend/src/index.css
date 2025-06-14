@@ -1,22 +1,6 @@
-/* src/index.css */
+/* Global styles */
 
-/* 1. Color Palette */
-:root {
-  --blue-dark:      #0a2342;
-  --blue-mid:       #1e3a5f;
-  --blue-light:     #3b5c8e;
-  --accent:         #1e90ff;
-  --danger:         #d32f2f;
-  --warning:        #f9a825;
-  --success:        #4caf50;
-  --caution:        #ffb300;
-  --text-light:     #f1f5f9;
-  --bg:             #0a182e;
-  /* Table-specific */
-  --table-row-even: #142c4a;
-  --table-row-odd:  #0a182e;
-  --table-header:   #1e3a5f;
-}
+@import './styles/theme.css';
 
 /* 2. Reset & Base */
 * {
@@ -28,7 +12,8 @@ html, body, #root {
   height: 100%;
   background: var(--bg);
   color: var(--text-light);
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Inter', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 a {
   text-decoration: none;
@@ -53,9 +38,10 @@ h1, h2, h3 {
   font-size: 1rem;
   padding: 0.5rem 1rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  box-shadow: var(--shadow-1);
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 /* spacing between buttons */
 .btn + .btn {
@@ -67,6 +53,7 @@ h1, h2, h3 {
 }
 .btn-primary:hover {
   background: var(--blue-light);
+  transform: scale(1.02);
 }
 .btn-warning {
   background: var(--warning);
@@ -74,6 +61,7 @@ h1, h2, h3 {
 }
 .btn-warning:hover {
   background: #f57f17;
+  transform: scale(1.02);
 }
 .btn-danger {
   background: var(--danger);
@@ -81,6 +69,7 @@ h1, h2, h3 {
 }
 .btn-danger:hover {
   background: #b71c1c;
+  transform: scale(1.02);
 }
 .btn-sm {
   padding: 0.25rem 0.75rem;
@@ -140,30 +129,37 @@ tbody tr:nth-child(odd) {
 /* 7. Forms */
 input, select, textarea {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   margin-bottom: 1rem;
   border: 1px solid var(--blue-mid);
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--blue-dark);
   color: var(--text-light);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
 }
 
 /* 8. Main Tab Navigation */
 .nav-tabs {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   border-bottom: 2px solid var(--blue-mid);
   margin-bottom: 1rem;
+}
+.nav-tabs .nav-links {
+  display: flex;
 }
 .nav-tabs a {
   padding: 0.5rem 1rem;
   margin-right: 0.5rem;
   background: var(--blue-dark);
   color: var(--text-light);
-  border-radius: 4px 4px 0 0;
+  border-radius: 6px 6px 0 0;
   transition: background-color 0.2s ease;
 }
 .nav-tabs a:hover {
@@ -172,7 +168,7 @@ input:focus, select:focus, textarea:focus {
 .nav-tabs a.active {
   background: var(--accent);
   color: var(--bg);
-  font-weight: bold;
+  font-weight: 500;
   border-bottom: 2px solid var(--accent);
 }
 
@@ -216,7 +212,7 @@ input:focus, select:focus, textarea:focus {
   width: 90%;
   max-width: 500px;
   position: relative;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  box-shadow: var(--shadow-2);
 }
 .modal-close {
   position: absolute;
@@ -249,20 +245,55 @@ input:focus, select:focus, textarea:focus {
   margin-top: 1rem;
 }
 
-.pill {
+.card {
   background: var(--blue-dark);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: var(--shadow-1);
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
+}
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+}
+.card:hover {
+  box-shadow: var(--shadow-2);
+  transform: translateY(-2px);
+}
+
+.pill {
+  background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid));
   border-radius: 999px;
   padding: 0.75rem 1rem;
   display: flex;
   flex-direction: column;
   text-align: center;
+  box-shadow: var(--shadow-1);
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
 }
 
 .pill span {
   font-size: 0.9rem;
 }
 
-.pill.green  { background: var(--success); color: var(--bg); }
-.pill.yellow { background: var(--warning); color: var(--blue-dark); }
-.pill.amber  { background: var(--caution); color: var(--blue-dark); }
-.pill.red    { background: var(--danger); color: #fff; }
+.pill:hover {
+  box-shadow: var(--shadow-2);
+  transform: translateY(-2px);
+}
+
+.pill.green  { background: var(--success); color: var(--bg); font-weight: 500; }
+.pill.yellow { background: var(--warning); color: var(--blue-dark); font-weight: 500; }
+.pill.amber  { background: var(--caution); color: var(--blue-dark); font-weight: 500; }
+.pill.red    { background: var(--danger); color: #fff; font-weight: 500; }
+
+/* Theme toggle button */
+.theme-toggle {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: var(--text-light);
+  margin-left: 1rem;
+}
