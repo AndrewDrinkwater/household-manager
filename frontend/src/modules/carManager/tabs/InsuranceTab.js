@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getInsurances, createInsurance, updateInsurance, deleteInsurance, getVendors } from '../../../api';
 import RecordForm from './RecordForm';
 
-export default function InsuranceTab({ carId }) {
+export default function InsuranceTab({ carId, onChange }) {
   const [records, setRecords] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -44,6 +44,7 @@ export default function InsuranceTab({ carId }) {
         .then(() => {
           closeModal();
           loadRecords();
+          if (onChange) onChange();
         })
         .catch(console.error);
     } else {
@@ -55,6 +56,7 @@ export default function InsuranceTab({ carId }) {
         .then(() => {
           closeModal();
           loadRecords();
+          if (onChange) onChange();
         })
         .catch(err => {
           console.error('Create insurance failed:', err.response?.data || err.message);
@@ -65,7 +67,10 @@ export default function InsuranceTab({ carId }) {
   const handleDelete = (id) => {
     if (window.confirm('Delete this insurance record?')) {
       deleteInsurance(id)
-        .then(() => loadRecords())
+        .then(() => {
+          loadRecords();
+          if (onChange) onChange();
+        })
         .catch(console.error);
     }
   };
