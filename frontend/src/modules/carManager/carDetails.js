@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCar } from '../../api';
+import { getCar, getInsurances } from '../../api';
 import OverviewTab from './tabs/OverviewTab';
 import MotTab from './tabs/MotTab';
 import InsuranceTab from './tabs/InsuranceTab';
@@ -10,10 +10,28 @@ export default function CarDetails({ carId, onClose, onCarsUpdated }) {
   const [activeTab, setActiveTab] = useState('mot'); // Default to first actual tab
   const [car, setCar] = useState(null);
 
-  const loadCar = () => {
-    getCar(carId)
-      .then(res => setCar(res.data))
-      .catch(console.error);
+  const loadCar = async () => {
+    try {
+      const [carRes, insRes] = await Promise.all([
+        getCar(carId),
+        getInsurances(carId)
+      ]);
+
+      let carData = carRes.data;
+      const insurances = insRes.data || [];
+      if (insurances.length > 0) {
+        const latest = insurances.reduce((a, b) =>
+          new Date(a.expiryDate) > new Date(b.expiryDate) ? a : b
+        );
+        const renewal = new Date(latest.expiryDate);
+        renewal.setFullYear(renewal.getFullYear() + 1);
+        carData = { ...carData, nextInsuranceDue: renewal.toISOString() };
+      }
+
+      setCar(carData);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
