@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCar } from '../../api';
+import { getCar, deleteCar, updateCar } from '../../api';
 import OverviewTab from './tabs/OverviewTab';
 import MotTab from './tabs/MotTab';
 import InsuranceTab from './tabs/InsuranceTab';
@@ -28,6 +28,27 @@ export default function CarDetails({ carId, onClose, onCarsUpdated }) {
     if (onCarsUpdated) onCarsUpdated();
   };
 
+  const handleDelete = () => {
+    if (window.confirm('Delete this car?')) {
+      deleteCar(carId)
+        .then(() => {
+          if (onCarsUpdated) onCarsUpdated();
+          onClose();
+        })
+        .catch(console.error);
+    }
+  };
+
+  const handleToggleStatus = () => {
+    const newStatus = car.status === 'Retired' ? 'Active' : 'Retired';
+    updateCar(carId, { status: newStatus })
+      .then(() => {
+        loadCar();
+        if (onCarsUpdated) onCarsUpdated();
+      })
+      .catch(console.error);
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'mot':
@@ -49,6 +70,12 @@ export default function CarDetails({ carId, onClose, onCarsUpdated }) {
     <div style={styles.overlay}>
       <div style={styles.container}>
         <button onClick={onClose} style={styles.closeBtn}>×</button>
+        <div style={styles.actionBar}>
+          <button className="btn btn-danger btn-sm" onClick={handleDelete}>Delete</button>
+          <button className="btn btn-warning btn-sm" onClick={handleToggleStatus}>
+            {car.status === 'Retired' ? 'Activate' : 'Retire'}
+          </button>
+        </div>
 
         {/* Always visible Overview */}
         <div style={styles.overview}>
@@ -111,6 +138,11 @@ const styles = {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
+  },
+  actionBar: {
+    display: 'flex',
+    gap: '0.5rem',
+    padding: '0.5rem 1rem',
   },
   overview: {
     flexShrink: 0,

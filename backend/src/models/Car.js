@@ -8,6 +8,11 @@ const Car = sequelize.define('Car', {
   registration: { type: DataTypes.STRING, unique: true },
   value:      { type: DataTypes.DECIMAL(10, 2) },
   notes:      { type: DataTypes.TEXT },
+  status:     {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'Active'
+  },
 });
 
 module.exports = Car;
