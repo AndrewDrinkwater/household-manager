@@ -18,6 +18,8 @@ const Insurance     = require('./models/Insurance');
 const ServiceRecord = require('./models/ServiceRecord');
 const CarTax        = require('./models/CarTax');
 const MileageRecord = require('./models/MileageRecord');
+const BacklogItem   = require('./models/BacklogItem');
+const BacklogNote   = require('./models/BacklogNote');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -181,6 +183,115 @@ router.get('/attachments/download/:id', async (req, res) => {
     const absPath = path.join(UPLOAD_DIR, attachment.filename);
     if (!fs.existsSync(absPath)) return res.status(404).json({ error: 'File missing' });
     res.download(absPath, attachment.originalname);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --------- Backlog Items ---------
+router.get('/backlog-items', async (req, res) => {
+  try {
+    const items = await BacklogItem.findAll({ order: [['order', 'ASC']] });
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/backlog-items', async (req, res) => {
+  try {
+    const max = await BacklogItem.max('order');
+    const item = await BacklogItem.create({
+      ...req.body,
+      order: (max || 0) + 1,
+    });
+    res.status(201).json(item);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/backlog-items/:id', async (req, res) => {
+  try {
+    const [updated] = await BacklogItem.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/backlog-items/:id', async (req, res) => {
+  try {
+    const deleted = await BacklogItem.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/backlog-items/:id/move', async (req, res) => {
+  try {
+    const { direction } = req.body;
+    const item = await BacklogItem.findByPk(req.params.id);
+    if (!item) return res.status(404).json({ error: 'Not found' });
+    const targetOrder = direction === 'up' ? item.order - 1 : item.order + 1;
+    const swap = await BacklogItem.findOne({ where: { order: targetOrder } });
+    if (swap) await swap.update({ order: item.order });
+    await item.update({ order: targetOrder });
+    const items = await BacklogItem.findAll({ order: [['order', 'ASC']] });
+    res.json(items);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.get('/backlog-items/:itemId/notes', async (req, res) => {
+  try {
+    const notes = await BacklogNote.findAll({
+      where: { BacklogItemId: req.params.itemId },
+      order: [['createdAt', 'ASC']],
+    });
+    res.json(notes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/backlog-items/:itemId/notes', async (req, res) => {
+  try {
+    const note = await BacklogNote.create({
+      BacklogItemId: req.params.itemId,
+      text: req.body.text || '',
+    });
+    res.status(201).json(note);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.post('/backlog-items/:itemId/attachments', upload.single('file'), async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const attachment = await Attachment.create({
+      BacklogItemId: itemId,
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
+    res.status(201).json(attachment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/backlog-items/:itemId/attachments', async (req, res) => {
+  try {
+    const attachments = await Attachment.findAll({ where: { BacklogItemId: req.params.itemId } });
+    res.json(attachments);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

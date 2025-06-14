@@ -103,3 +103,26 @@ export const getMileageRecords = (carId) => axios.get(`${API_URL}/cars/${carId}/
 export const createMileageRecord = (carId, data) => axios.post(`${API_URL}/cars/${carId}/mileage-records`, data);
 export const updateMileageRecord = (id, data) => axios.put(`${API_URL}/mileage-records/${id}`, data);
 export const deleteMileageRecord = (id) => axios.delete(`${API_URL}/mileage-records/${id}`);
+
+// --- Backlog Items ---
+export const getBacklogItems = () => axios.get(`${API_URL}/backlog-items`);
+export const createBacklogItem = (data) => axios.post(`${API_URL}/backlog-items`, data);
+export const updateBacklogItem = (id, data) => axios.put(`${API_URL}/backlog-items/${id}`, data);
+export const deleteBacklogItem = (id) => axios.delete(`${API_URL}/backlog-items/${id}`);
+export const moveBacklogItem = (id, direction) =>
+  axios.post(`${API_URL}/backlog-items/${id}/move`, { direction });
+
+export const uploadBacklogAttachment = (itemId, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return axios.post(`${API_URL}/backlog-items/${itemId}/attachments`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+export const getBacklogAttachments = (itemId) =>
+  axios.get(`${API_URL}/backlog-items/${itemId}/attachments`);
+
+export const getBacklogNotes = (itemId) =>
+  axios.get(`${API_URL}/backlog-items/${itemId}/notes`);
+export const addBacklogNote = (itemId, text) =>
+  axios.post(`${API_URL}/backlog-items/${itemId}/notes`, { text });

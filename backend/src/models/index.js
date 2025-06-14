@@ -10,6 +10,8 @@ const Insurance    = require('./Insurance');
 const ServiceRecord= require('./ServiceRecord');
 const CarTax       = require('./CarTax');
 const MileageRecord= require('./MileageRecord');
+const BacklogItem  = require('./BacklogItem');
+const BacklogNote  = require('./BacklogNote');
 
 // Associations:
 Service.hasMany(Attachment, { foreignKey: 'ServiceId', onDelete: 'CASCADE' });
@@ -24,6 +26,11 @@ Service.belongsTo(Subcategory,  { foreignKey: { allowNull: false } });
 Frequency.hasMany(Service,    { onDelete: 'RESTRICT' });
 Service.belongsTo(Frequency,  { foreignKey: { allowNull: false } });
 
+BacklogItem.hasMany(Attachment, { foreignKey: 'BacklogItemId', onDelete: 'CASCADE' });
+Attachment.belongsTo(BacklogItem, { foreignKey: 'BacklogItemId' });
+BacklogItem.hasMany(BacklogNote, { foreignKey: 'BacklogItemId', onDelete: 'CASCADE' });
+BacklogNote.belongsTo(BacklogItem, { foreignKey: 'BacklogItemId' });
+
 module.exports = {
   Service,
   Attachment,
@@ -37,4 +44,6 @@ module.exports = {
   ServiceRecord,
   CarTax,
   MileageRecord,
+  BacklogItem,
+  BacklogNote,
 };

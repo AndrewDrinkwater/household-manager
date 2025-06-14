@@ -14,6 +14,8 @@ require('./models/Frequency');
 require('./models/Service');
 require('./models/user');
 require('./models/Attachment'); // Make sure to require this!
+require('./models/BacklogItem');
+require('./models/BacklogNote');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
