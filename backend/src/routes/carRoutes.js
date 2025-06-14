@@ -34,28 +34,35 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/full', async (req, res) => {
   try {
     const carId = req.params.id;
-    const car = await Car.findByPk(carId);
+    const car = await Car.findByPk(carId, {
+      include: [
+        { model: CarTax, limit: 1, order: [['expiryDate', 'DESC']] },
+        { model: Insurance, limit: 1, order: [['expiryDate', 'DESC']] },
+        { model: ServiceRecord, limit: 1, order: [['serviceDate', 'DESC']] },
+        { model: MileageRecord, limit: 1, order: [['recordDate', 'DESC']] }
+      ]
+    });
+
     if (!car) return res.status(404).json({ error: 'Car not found' });
 
-    // Fetch latest related records
-    const latestTax = await CarTax.findOne({ where: { CarId: carId }, order: [['expiryDate', 'DESC']] });
-    const latestInsurance = await Insurance.findOne({ where: { CarId: carId }, order: [['expiryDate', 'DESC']] });
-    const latestService = await ServiceRecord.findOne({ where: { CarId: carId }, order: [['serviceDate', 'DESC']] });
-    const latestMileage = await MileageRecord.findOne({ where: { CarId: carId }, order: [['recordDate', 'DESC']] });
+    const latestTax = car.CarTaxes && car.CarTaxes[0];
+    const latestInsurance = car.Insurances && car.Insurances[0];
+    const latestService = car.ServiceRecords && car.ServiceRecords[0];
+    const latestMileage = car.MileageRecords && car.MileageRecords[0];
 
-    // Compute next due dates and values
     const nextTaxDueDate = latestTax ? new Date(new Date(latestTax.expiryDate).setFullYear(new Date(latestTax.expiryDate).getFullYear() + 1)) : null;
     const insuranceRenewalDate = latestInsurance ? new Date(new Date(latestInsurance.expiryDate).setFullYear(new Date(latestInsurance.expiryDate).getFullYear() + 1)) : null;
+
     let insuranceProviderName = null;
     if (latestInsurance && latestInsurance.provider) {
       const vendor = await Vendor.findByPk(latestInsurance.provider);
       insuranceProviderName = vendor ? vendor.name : null;
     }
+
     const serviceDueDate = latestService ? new Date(new Date(latestService.serviceDate).setFullYear(new Date(latestService.serviceDate).getFullYear() + 1)) : null;
     const serviceType = latestService ? (latestService.serviceType === 'Full' ? 'Partial' : 'Full') : null;
     const lastMileage = latestMileage ? latestMileage.mileage : null;
 
-    // Add computed fields to car response
     const carData = car.toJSON();
     carData.nextTaxDueDate = nextTaxDueDate;
     carData.insuranceRenewalDate = insuranceRenewalDate;
