@@ -10,14 +10,19 @@ import {
   updateIncomeSource
 } from '../../api';
 
+const fmt = val => new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+}).format(parseFloat(val || 0));
+
 function EntryCell({ entry, monthId, lineId, reload }) {
-  const [amount, setAmount] = useState(entry ? entry.planned_amount : '');
+  const [amount, setAmount] = useState(entry ? entry.planned_amount : 0);
   const [paid, setPaid] = useState(entry ? entry.is_paid : false);
   const [editing, setEditing] = useState(false);
   const clickTimeout = React.useRef(null);
 
   useEffect(() => {
-    setAmount(entry ? entry.planned_amount : '');
+    setAmount(entry ? entry.planned_amount : 0);
     setPaid(entry ? entry.is_paid : false);
   }, [entry]);
 
@@ -59,11 +64,12 @@ function EntryCell({ entry, monthId, lineId, reload }) {
     save({ amount });
   };
 
+
   return (
     <div
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
-      style={{ backgroundColor: paid ? '#d4edda' : 'transparent', cursor: 'pointer' }}
+      style={{ backgroundColor: paid ? 'var(--success)' : 'transparent', cursor: 'pointer', color: paid ? '#fff' : 'inherit' }}
     >
       {editing ? (
         <input
@@ -80,7 +86,7 @@ function EntryCell({ entry, monthId, lineId, reload }) {
           style={{ width: '100%' }}
         />
       ) : (
-        <span>{amount || ''}</span>
+        <span>{fmt(amount)}</span>
       )}
     </div>
   );
@@ -142,6 +148,18 @@ export default function FinanceManager() {
   const variables = lines.filter(l => l.type === 'VARIABLE' && !l.is_retired);
   const annuals = lines.filter(l => l.type === 'ANNUAL' && !l.is_retired);
 
+  const remainingFor = month => {
+    const incomeTotal = month.IncomeSources.reduce((s, i) => s + parseFloat(i.amount || 0), 0);
+    const expenseTotal = month.BudgetEntries.reduce((s, e) => {
+      const line = lines.find(l => l.id === e.BudgetLineId);
+      if (line && !line.is_retired) {
+        s += parseFloat(e.planned_amount || 0);
+      }
+      return s;
+    }, 0);
+    return incomeTotal - expenseTotal;
+  };
+
   return (
     <div className="container">
       <h3>Budget</h3>
@@ -153,9 +171,15 @@ export default function FinanceManager() {
             <th className="line-name">Line</th>
             {months.map(m => <th className="month-col" key={m.id}>{m.month}</th>)}
           </tr>
+          <tr className="remaining-row">
+            <th className="line-name">Remaining</th>
+            {months.map(m => (
+              <th className="month-col" key={`rem-${m.id}`}>{fmt(remainingFor(m))}</th>
+            ))}
+          </tr>
         </thead>
         <tbody>
-          <tr>
+          <tr className="section-header">
             <th colSpan={months.length + 1}>Income <button className="btn btn-sm btn-secondary" onClick={addIncomeRow}>Add Income</button></th>
           </tr>
           {incomeNames.map(name => (
@@ -166,7 +190,7 @@ export default function FinanceManager() {
               ))}
             </tr>
           ))}
-          <tr>
+          <tr className="section-header">
             <th colSpan={months.length + 1}>Bills <button className="btn btn-sm btn-secondary" onClick={() => addLine('BILL')}>Add Bill</button></th>
           </tr>
           {bills.map(line => (
@@ -178,7 +202,7 @@ export default function FinanceManager() {
               })}
             </tr>
           ))}
-          <tr>
+          <tr className="section-header">
             <th colSpan={months.length + 1}>Variable <button className="btn btn-sm btn-secondary" onClick={() => addLine('VARIABLE')}>Add Variable</button></th>
           </tr>
           {variables.map(line => (
@@ -190,7 +214,7 @@ export default function FinanceManager() {
               })}
             </tr>
           ))}
-          <tr>
+          <tr className="section-header">
             <th colSpan={months.length + 1}>Annual <button className="btn btn-sm btn-secondary" onClick={() => addLine('ANNUAL')}>Add Annual</button></th>
           </tr>
           {annuals.map(line => (
