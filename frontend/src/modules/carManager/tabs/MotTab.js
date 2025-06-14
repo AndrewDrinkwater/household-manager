@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getMots, createMot, updateMot, deleteMot } from '../../../api';
 import RecordForm from './RecordForm';
 
-export default function MotTab({ carId }) {
+export default function MotTab({ carId, onChange }) {
   const [records, setRecords] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
@@ -35,6 +35,7 @@ export default function MotTab({ carId }) {
         .then(() => {
           closeModal();
           loadRecords();
+          if (onChange) onChange();
         })
         .catch(console.error);
     } else {
@@ -43,6 +44,7 @@ export default function MotTab({ carId }) {
         .then(() => {
           closeModal();
           loadRecords();
+          if (onChange) onChange();
         })
         .catch(console.error);
     }
@@ -51,7 +53,10 @@ export default function MotTab({ carId }) {
   const handleDelete = (id) => {
     if (window.confirm('Delete this MOT record?')) {
       deleteMot(id)
-        .then(() => loadRecords())
+        .then(() => {
+          loadRecords();
+          if (onChange) onChange();
+        })
         .catch(console.error);
     }
   };

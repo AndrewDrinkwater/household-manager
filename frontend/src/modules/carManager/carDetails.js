@@ -1,20 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getCar } from '../../api';
 import OverviewTab from './tabs/OverviewTab';
 import MotTab from './tabs/MotTab';
 import InsuranceTab from './tabs/InsuranceTab';
 import ServiceTab from './tabs/ServiceTab';
 import MileageTab from './tabs/MileageTab';
 
-export default function CarDetails({ car, onClose }) {
+export default function CarDetails({ carId, onClose, onCarsUpdated }) {
   const [activeTab, setActiveTab] = useState('mot'); // Default to first actual tab
+  const [car, setCar] = useState(null);
+
+  const loadCar = () => {
+    getCar(carId)
+      .then(res => setCar(res.data))
+      .catch(console.error);
+  };
+
+  useEffect(() => {
+    if (carId) loadCar();
+  }, [carId]);
+
+  if (!car) return <div style={styles.overlay}><div style={styles.container}>Loading...</div></div>;
+
+  const handleRecordsChange = () => {
+    loadCar();
+    if (onCarsUpdated) onCarsUpdated();
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'mot': return <MotTab carId={car.id} />;
-      case 'insurance': return <InsuranceTab carId={car.id} />;
-      case 'service': return <ServiceTab carId={car.id} />;
-      case 'mileage': return <MileageTab carId={car.id} />;
-      default: return null;
+      case 'mot':
+        return <MotTab carId={carId} onChange={handleRecordsChange} />;
+      case 'insurance':
+        return <InsuranceTab carId={carId} onChange={handleRecordsChange} />;
+      case 'service':
+        return <ServiceTab carId={carId} onChange={handleRecordsChange} />;
+      case 'mileage':
+        return <MileageTab carId={carId} onChange={handleRecordsChange} />;
+      default:
+        return null;
     }
   };
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getMileageRecords, createMileageRecord, updateMileageRecord, deleteMileageRecord } from '../../../api';
 import RecordForm from './RecordForm';
 
-export default function MileageTab({ carId }) {
+export default function MileageTab({ carId, onChange }) {
   const [records, setRecords] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
@@ -35,6 +35,7 @@ export default function MileageTab({ carId }) {
         .then(() => {
           closeModal();
           loadRecords();
+          if (onChange) onChange();
         })
         .catch(console.error);
     } else {
@@ -43,6 +44,7 @@ export default function MileageTab({ carId }) {
         .then(() => {
           closeModal();
           loadRecords();
+          if (onChange) onChange();
         })
         .catch(console.error);
     }
@@ -51,7 +53,10 @@ export default function MileageTab({ carId }) {
   const handleDelete = (id) => {
     if (window.confirm('Delete this mileage record?')) {
       deleteMileageRecord(id)
-        .then(() => loadRecords())
+        .then(() => {
+          loadRecords();
+          if (onChange) onChange();
+        })
         .catch(console.error);
     }
   };
