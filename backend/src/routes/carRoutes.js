@@ -36,10 +36,30 @@ router.get('/:id/full', async (req, res) => {
     const carId = req.params.id;
     const car = await Car.findByPk(carId, {
       include: [
-        { model: CarTax, limit: 1, order: [['expiryDate', 'DESC']] },
-        { model: Insurance, limit: 1, order: [['expiryDate', 'DESC']] },
-        { model: ServiceRecord, limit: 1, order: [['serviceDate', 'DESC']] },
-        { model: MileageRecord, limit: 1, order: [['recordDate', 'DESC']] }
+        {
+          model: CarTax,
+          separate: true,
+          limit: 1,
+          order: [['expiryDate', 'DESC']]
+        },
+        {
+          model: Insurance,
+          separate: true,
+          limit: 1,
+          order: [['expiryDate', 'DESC']]
+        },
+        {
+          model: ServiceRecord,
+          separate: true,
+          limit: 1,
+          order: [['serviceDate', 'DESC']]
+        },
+        {
+          model: MileageRecord,
+          separate: true,
+          limit: 1,
+          order: [['recordDate', 'DESC']]
+        }
       ]
     });
 
