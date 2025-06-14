@@ -100,8 +100,23 @@ table {
 }
 .finance-table th.month-col,
 .finance-table td.month-col {
-  min-width: 90px; /* enough space for month header */
+  min-width: 45px; /* slimmer month columns */
   white-space: nowrap;
+}
+
+.section-header th {
+  background: var(--blue-mid);
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.remaining-row th {
+  background: var(--blue-dark);
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 /* Stack action buttons vertically */
 .action-buttons {
