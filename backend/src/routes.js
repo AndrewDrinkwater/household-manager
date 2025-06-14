@@ -20,6 +20,12 @@ const CarTax        = require('./models/CarTax');
 const MileageRecord = require('./models/MileageRecord');
 const BacklogItem   = require('./models/BacklogItem');
 const BacklogNote   = require('./models/BacklogNote');
+const BudgetMonth   = require('./models/BudgetMonth');
+const BudgetLine    = require('./models/BudgetLine');
+const BudgetEntry   = require('./models/BudgetEntry');
+const IncomeSource  = require('./models/IncomeSource');
+const SavingsPot    = require('./models/SavingsPot');
+const SavingsEntry  = require('./models/SavingsEntry');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -754,5 +760,61 @@ crud('subcategories',Subcategory, [Category]);
 crud('vendors',      Vendor);
 crud('services',     Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
 crud('contracts',    Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
+
+// ----- Budget Months -----
+router.get('/budget-months', async (req, res) => {
+  try {
+    const months = await BudgetMonth.findAll({
+      order: [['month', 'ASC']],
+      include: [
+        { model: BudgetEntry, include: [BudgetLine] },
+        IncomeSource,
+        { model: SavingsEntry, include: [SavingsPot] },
+      ],
+    });
+    res.json(months);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/budget-months', async (req, res) => {
+  try {
+    const last = await BudgetMonth.findOne({ order: [['month', 'DESC']] });
+    let nextDate = last ? new Date(last.month + '-01') : new Date();
+    if (last) nextDate.setMonth(nextDate.getMonth() + 1);
+    const monthStr = nextDate.toISOString().slice(0,7);
+    const month = await BudgetMonth.create({ month: monthStr });
+
+    if (last) {
+      const lines = await BudgetLine.findAll({ where: { is_retired: false, type: { [Op.ne]: 'ANNUAL' } } });
+      for (const line of lines) {
+        const prev = await BudgetEntry.findOne({ where: { BudgetMonthId: last.id, BudgetLineId: line.id } });
+        await BudgetEntry.create({
+          BudgetMonthId: month.id,
+          BudgetLineId: line.id,
+          planned_amount: prev ? prev.planned_amount : 0,
+        });
+      }
+    }
+
+    const created = await BudgetMonth.findByPk(month.id, {
+      include: [
+        { model: BudgetEntry, include: [BudgetLine] },
+        IncomeSource,
+        { model: SavingsEntry, include: [SavingsPot] },
+      ],
+    });
+    res.status(201).json(created);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+crud('budget-lines', BudgetLine);
+crud('budget-entries', BudgetEntry);
+crud('income-sources', IncomeSource);
+crud('savings-pots', SavingsPot);
+crud('savings-entries', SavingsEntry);
 
 module.exports = router;

@@ -65,7 +65,6 @@ export const deleteAttachment = (attachmentId) =>
   axios.delete(`${API_URL}/attachments/${attachmentId}`);
 
 // Expose the base uploads URL for image/file preview/download
-export { UPLOADS_URL };
 
 // --- Cars ---
 export const getCars = () => axios.get(`${API_URL}/cars`);
@@ -126,3 +125,29 @@ export const getBacklogNotes = (itemId) =>
   axios.get(`${API_URL}/backlog-items/${itemId}/notes`);
 export const addBacklogNote = (itemId, text) =>
   axios.post(`${API_URL}/backlog-items/${itemId}/notes`, { text });
+
+// --- Budget Module ---
+export const getBudgetMonths = () => axios.get(`${API_URL}/budget-months`);
+export const createBudgetMonth = () => axios.post(`${API_URL}/budget-months`);
+
+export const getBudgetLines = () => axios.get(`${API_URL}/budget-lines`);
+export const createBudgetLine = data => axios.post(`${API_URL}/budget-lines`, data);
+export const updateBudgetLine = (id, data) => axios.put(`${API_URL}/budget-lines/${id}`, data);
+export const deleteBudgetLine = id => axios.delete(`${API_URL}/budget-lines/${id}`);
+
+export const updateBudgetEntry = (id, data) => axios.put(`${API_URL}/budget-entries/${id}`, data);
+
+export const createIncomeSource = data => axios.post(`${API_URL}/income-sources`, data);
+export const updateIncomeSource = (id, data) => axios.put(`${API_URL}/income-sources/${id}`, data);
+export const deleteIncomeSource = id => axios.delete(`${API_URL}/income-sources/${id}`);
+
+export const getSavingsPots = () => axios.get(`${API_URL}/savings-pots`);
+export const createSavingsPot = data => axios.post(`${API_URL}/savings-pots`, data);
+export const updateSavingsPot = (id, data) => axios.put(`${API_URL}/savings-pots/${id}`, data);
+export const deleteSavingsPot = id => axios.delete(`${API_URL}/savings-pots/${id}`);
+
+export const createSavingsEntry = data => axios.post(`${API_URL}/savings-entries`, data);
+export const updateSavingsEntry = (id, data) => axios.put(`${API_URL}/savings-entries/${id}`, data);
+export const deleteSavingsEntry = id => axios.delete(`${API_URL}/savings-entries/${id}`);
+
+export { UPLOADS_URL };
