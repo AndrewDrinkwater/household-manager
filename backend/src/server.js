@@ -86,7 +86,7 @@ app.post('/api/services/:serviceId/attachments', upload.single('file'), async (r
   try {
     await sequelize.authenticate();
     console.log('✅ Database connected');
-    await sequelize.sync();
+    await sequelize.sync({ alter: true });
     console.log('✅ Database synced');
     app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
   } catch (err) {
