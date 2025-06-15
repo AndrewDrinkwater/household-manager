@@ -13,7 +13,8 @@ The backend exposes REST endpoints for managing contracts, cars, backlog items a
 
 ## Prerequisites
 
-- Node.js (18 or later recommended)
+- **Backend Node.js version:** Node 18 LTS is supported and tested. Other Node.js
+  versions may fail to load the `sqlite3` module used by the backend.
 - npm
 
 ## Installation
