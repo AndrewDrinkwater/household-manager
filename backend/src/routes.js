@@ -758,8 +758,8 @@ function crud(path, Model, include = []) {
 crud('categories',   Category,    [Subcategory]);
 crud('subcategories',Subcategory, [Category]);
 crud('vendors',      Vendor);
-crud('services',     Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
-crud('contracts',    Service,     [Vendor, { model: Subcategory, include: Category }, Frequency]);
+crud('services',     Service,     [Vendor, { model: Subcategory, include: [Category] }, Frequency]);
+crud('contracts',    Service,     [Vendor, { model: Subcategory, include: [Category] }, Frequency]);
 
 // ----- Budget Months -----
 router.get('/budget-months', async (req, res) => {
