@@ -30,7 +30,8 @@ Subcategory.hasMany(Service,    { onDelete: 'CASCADE' });
 Service.belongsTo(Subcategory,  { foreignKey: { allowNull: false } });
 
 Frequency.hasMany(Service,    { onDelete: 'RESTRICT' });
-Service.belongsTo(Frequency,  { foreignKey: { allowNull: false } });
+// Frequency is optional so allow null
+Service.belongsTo(Frequency,  { foreignKey: { allowNull: true } });
 
 BacklogItem.hasMany(Attachment, { foreignKey: 'BacklogItemId', onDelete: 'CASCADE' });
 Attachment.belongsTo(BacklogItem, { foreignKey: 'BacklogItemId' });
