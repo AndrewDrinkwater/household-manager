@@ -73,6 +73,13 @@ tests from the project root:
 npm test
 ```
 
+You can also run the backend or frontend tests individually:
+
+```bash
+npm run test:backend   # runs Jest tests in backend/
+npm run test:frontend  # runs React tests in frontend/
+```
+
 The repository includes a very small Jest test under `backend/tests/basic.test.js`
 that simply verifies a sample function works correctly.
 
@@ -82,7 +89,7 @@ before invoking the test command.
 
 ## Configuration
 
-The backend stores data in `backend/database.sqlite` using SQLite. You may set the `JWT_SECRET` environment variable for authentication.
+The backend stores data in `backend/database.sqlite` using SQLite. You may set the `JWT_SECRET` environment variable for authentication, and `PORT` to change the API port (default `4000`).
 
 ## Features
 
