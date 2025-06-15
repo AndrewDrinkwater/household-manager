@@ -86,10 +86,12 @@ export default function ContractForm({ existing, onSaved, onCancel }) {
 
     const payload = {
       ...service,
-      cost: Number(service.cost),
+      cost: service.cost ? Number(service.cost) : null,
+      start_date: service.start_date || null,
+      next_due_date: service.next_due_date || null,
       VendorId: Number(service.VendorId),
       SubcategoryId: Number(service.SubcategoryId),
-      FrequencyId: Number(service.FrequencyId)
+      FrequencyId: service.FrequencyId ? Number(service.FrequencyId) : null,
     };
 
     const action = existing
