@@ -9,6 +9,8 @@
     "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend start\"",
     "test:backend": "npm --prefix backend test",
     "test:frontend": "npm --prefix frontend test -- --watchAll=false",
-    "test": "npm run test:backend && npm run test:frontend"
+    "test": "npm run test:backend && npm run test:frontend",
+    "fix-perms": "chmod +x node_modules/.bin/* backend/node_modules/.bin/* 2>/dev/null || true",
+    "pretest": "npm run fix-perms"
   }
 }
