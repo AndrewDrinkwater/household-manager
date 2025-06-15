@@ -1,4 +1,5 @@
 // backend/server.js
+// This comment was added to test Codex automated testing.
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
