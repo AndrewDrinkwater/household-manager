@@ -11,5 +11,5 @@ test('calls onSelectCar when a car is clicked', () => {
   const handler = jest.fn();
   render(<CarList cars={[car]} onSelectCar={handler} selectedCarId={null} />);
   fireEvent.click(screen.getByText('Ford Fiesta (-)').closest('div'));
-  expect(handler).toHaveBeenCalledWith(car, undefined);
+  expect(handler).toHaveBeenCalledWith(car);
 });
