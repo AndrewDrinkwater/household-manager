@@ -72,6 +72,9 @@ tests from the project root:
 npm test
 ```
 
+The repository includes a very small Jest test under `backend/tests/basic.test.js`
+that simply verifies a sample function works correctly.
+
 When running tests inside the Codex environment keep in mind that network
 access is restricted, so you should make sure the dependencies are installed
 before invoking the test command.
