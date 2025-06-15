@@ -68,13 +68,13 @@ app.post('/api/services/:serviceId/attachments', upload.single('file'), async (r
     const service = await Service.findByPk(serviceId);
     if (!service) return res.status(404).json({ error: 'Service not found' });
 
-    const attachment = await Attachment.create({
-      ServiceId: serviceId,
-      filename: req.file.originalname,
-      stored_filename: req.file.filename, // To use the unique file on disk
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-    });
+  const attachment = await Attachment.create({
+    ServiceId: serviceId,
+    filename: req.file.filename,
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size,
+  });
     res.status(201).json(attachment);
   } catch (err) {
     res.status(500).json({ error: err.message });
