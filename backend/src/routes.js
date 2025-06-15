@@ -32,6 +32,11 @@ const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
+// Simple helper for service debugging
+function serviceDebug(...args) {
+  console.log('[SERVICE DEBUG]', ...args);
+}
+
 // ----------------- LOGIN -----------------
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
@@ -139,7 +144,17 @@ const upload = multer({ storage });
 router.post('/services/:serviceId/attachments', upload.single('file'), async (req, res) => {
   try {
     const { serviceId } = req.params;
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    serviceDebug('POST /services/' + serviceId + '/attachments');
+    if (!req.file) {
+      serviceDebug('No file uploaded');
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    serviceDebug('Creating attachment record', {
+      filename: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
 
     const attachment = await Attachment.create({
       ServiceId: serviceId,
@@ -149,9 +164,11 @@ router.post('/services/:serviceId/attachments', upload.single('file'), async (re
       size: req.file.size,
     });
 
+    serviceDebug('Attachment created', attachment.id);
     res.status(201).json(attachment);
   } catch (err) {
     console.error('Upload attachment error:', err);
+    serviceDebug('Attachment upload failed', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -159,9 +176,12 @@ router.post('/services/:serviceId/attachments', upload.single('file'), async (re
 router.get('/services/:serviceId/attachments', async (req, res) => {
   try {
     const { serviceId } = req.params;
+    serviceDebug('GET /services/' + serviceId + '/attachments');
     const attachments = await Attachment.findAll({ where: { ServiceId: serviceId } });
+    serviceDebug('Found attachments', attachments.length);
     res.json(attachments);
   } catch (err) {
+    serviceDebug('Fetch attachments failed', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -169,27 +189,43 @@ router.get('/services/:serviceId/attachments', async (req, res) => {
 router.delete('/attachments/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    serviceDebug('DELETE /attachments/' + id);
     const attachment = await Attachment.findByPk(id);
-    if (!attachment) return res.status(404).json({ error: 'Attachment not found' });
+    if (!attachment) {
+      serviceDebug('Attachment not found');
+      return res.status(404).json({ error: 'Attachment not found' });
+    }
 
     const absPath = path.join(UPLOAD_DIR, attachment.filename);
     if (fs.existsSync(absPath)) fs.unlinkSync(absPath);
 
     await attachment.destroy();
+    serviceDebug('Attachment deleted', id);
     res.sendStatus(204);
   } catch (err) {
+    serviceDebug('Delete attachment failed', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
 router.get('/attachments/download/:id', async (req, res) => {
   try {
-    const attachment = await Attachment.findByPk(req.params.id);
-    if (!attachment) return res.status(404).json({ error: 'Attachment not found' });
+    const id = req.params.id;
+    serviceDebug('GET /attachments/download/' + id);
+    const attachment = await Attachment.findByPk(id);
+    if (!attachment) {
+      serviceDebug('Attachment not found for download');
+      return res.status(404).json({ error: 'Attachment not found' });
+    }
     const absPath = path.join(UPLOAD_DIR, attachment.filename);
-    if (!fs.existsSync(absPath)) return res.status(404).json({ error: 'File missing' });
+    if (!fs.existsSync(absPath)) {
+      serviceDebug('Attachment file missing');
+      return res.status(404).json({ error: 'File missing' });
+    }
+    serviceDebug('Sending file', absPath);
     res.download(absPath, attachment.originalname);
   } catch (err) {
+    serviceDebug('Download failed', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -383,35 +419,54 @@ router.delete('/users/:id', async (req, res) => {
 function crud(path, Model, include = []) {
   router.get(`/${path}`, async (req, res) => {
     try {
+      if (Model === Service) {
+        serviceDebug('GET /' + path, { query: req.query });
+      }
       const items = await Model.findAll({ include });
+      if (Model === Service) {
+        serviceDebug('Fetched', items.length, 'records');
+      }
       res.json(items);
     } catch (err) {
+      if (Model === Service) serviceDebug('Error fetching', err.message);
       res.status(500).json({ error: err.message });
     }
   });
   router.post(`/${path}`, async (req, res) => {
     try {
+      if (Model === Service) serviceDebug('POST /' + path, req.body);
       const inst = await Model.create(req.body);
+      if (Model === Service) serviceDebug('Created service with id', inst.id);
       res.status(201).json(inst);
     } catch (err) {
+      if (Model === Service) serviceDebug('Create failed', err.message);
       res.status(400).json({ error: err.message });
     }
   });
   router.put(`/${path}/:id`, async (req, res) => {
     try {
+      if (Model === Service) serviceDebug('PUT /' + path + '/' + req.params.id, req.body);
       const [updated] = await Model.update(req.body, { where: { id: req.params.id } });
       if (!updated) return res.status(404).json({ error: 'Not found' });
+      if (Model === Service) serviceDebug('Update success', req.params.id);
       res.sendStatus(204);
     } catch (err) {
+      if (Model === Service) serviceDebug('Update failed', err.message);
       res.status(400).json({ error: err.message });
     }
   });
   router.delete(`/${path}/:id`, async (req, res) => {
     try {
+      if (Model === Service) serviceDebug('DELETE /' + path + '/' + req.params.id);
       const deleted = await Model.destroy({ where: { id: req.params.id } });
-      if (!deleted) return res.status(404).json({ error: 'Not found' });
+      if (!deleted) {
+        if (Model === Service) serviceDebug('Service not found');
+        return res.status(404).json({ error: 'Not found' });
+      }
+      if (Model === Service) serviceDebug('Deleted service', req.params.id);
       res.sendStatus(204);
     } catch (err) {
+      if (Model === Service) serviceDebug('Delete failed', err.message);
       res.status(500).json({ error: err.message });
     }
   });
@@ -602,38 +657,53 @@ router.delete('/insurances/:id', async (req, res) => {
 // ServiceRecords for a Car
 router.get('/cars/:carId/service-records', async (req, res) => {
   try {
+    serviceDebug('GET /cars/' + req.params.carId + '/service-records');
     const records = await ServiceRecord.findAll({ where: { CarId: req.params.carId } });
+    serviceDebug('Found service records', records.length);
     res.json(records);
   } catch (err) {
+    serviceDebug('Fetch service records failed', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
 router.post('/cars/:carId/service-records', async (req, res) => {
   try {
+    serviceDebug('POST /cars/' + req.params.carId + '/service-records', req.body);
     const record = await ServiceRecord.create({ ...req.body, CarId: req.params.carId });
+    serviceDebug('Created service record', record.id);
     res.status(201).json(record);
   } catch (err) {
+    serviceDebug('Create service record failed', err.message);
     res.status(400).json({ error: err.message });
   }
 });
 
 router.put('/service-records/:id', async (req, res) => {
   try {
+    serviceDebug('PUT /service-records/' + req.params.id, req.body);
     const [updated] = await ServiceRecord.update(req.body, { where: { id: req.params.id } });
     if (!updated) return res.status(404).json({ error: 'Service record not found' });
+    serviceDebug('Service record updated', req.params.id);
     res.sendStatus(204);
   } catch (err) {
+    serviceDebug('Update service record failed', err.message);
     res.status(400).json({ error: err.message });
   }
 });
 
 router.delete('/service-records/:id', async (req, res) => {
   try {
+    serviceDebug('DELETE /service-records/' + req.params.id);
     const deleted = await ServiceRecord.destroy({ where: { id: req.params.id } });
-    if (!deleted) return res.status(404).json({ error: 'Service record not found' });
+    if (!deleted) {
+      serviceDebug('Service record not found');
+      return res.status(404).json({ error: 'Service record not found' });
+    }
+    serviceDebug('Service record deleted', req.params.id);
     res.sendStatus(204);
   } catch (err) {
+    serviceDebug('Delete service record failed', err.message);
     res.status(500).json({ error: err.message });
   }
 });
