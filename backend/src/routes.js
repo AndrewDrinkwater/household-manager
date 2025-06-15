@@ -716,44 +716,6 @@ router.delete('/mileage-records/:id', async (req, res) => {
   }
 });
 
-// --------- GENERIC CRUD for other models ---------
-function crud(path, Model, include = []) {
-  router.get(`/${path}`, async (req, res) => {
-    try {
-      const items = await Model.findAll({ include });
-      res.json(items);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  });
-  router.post(`/${path}`, async (req, res) => {
-    try {
-      const inst = await Model.create(req.body);
-      res.status(201).json(inst);
-    } catch (err) {
-      res.status(400).json({ error: err.message });
-    }
-  });
-  router.put(`/${path}/:id`, async (req, res) => {
-    try {
-      const [updated] = await Model.update(req.body, { where: { id: req.params.id } });
-      if (!updated) return res.status(404).json({ error: 'Not found' });
-      res.sendStatus(204);
-    } catch (err) {
-      res.status(400).json({ error: err.message });
-    }
-  });
-  router.delete(`/${path}/:id`, async (req, res) => {
-    try {
-      const deleted = await Model.destroy({ where: { id: req.params.id } });
-      if (!deleted) return res.status(404).json({ error: 'Not found' });
-      res.sendStatus(204);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  });
-}
-
 // Register generic CRUD routes
 crud('categories',   Category,    [Subcategory]);
 crud('subcategories',Subcategory, [Category]);
