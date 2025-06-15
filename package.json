@@ -6,6 +6,9 @@
     "concurrently": "^9.1.2"
   },
   "scripts": {
-    "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend start\""
+    "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend start\"",
+    "test:backend": "npm --prefix backend test",
+    "test:frontend": "npm --prefix frontend test -- --watchAll=false",
+    "test": "npm run test:backend && npm run test:frontend"
   }
 }
