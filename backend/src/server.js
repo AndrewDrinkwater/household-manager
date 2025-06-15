@@ -54,6 +54,7 @@ app.use('/api', routes);
 
 // ---- Attachment upload route (add after app.use('/api', routes)) ----
 require('./models'); // Loads all, registers associations
+const { Service, Attachment } = require('./models');
 
 
 app.post('/api/services/:serviceId/attachments', upload.single('file'), async (req, res) => {
