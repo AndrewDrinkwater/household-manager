@@ -54,6 +54,28 @@ Uploaded files are served from the `/uploads` path:
 const UPLOADS_URL = 'http://localhost:4000/uploads';
 ```
 
+## Testing
+
+To run the automated tests first install dependencies for both the backend and
+the frontend if you have not already done so:
+
+```bash
+(cd backend && npm install)
+(cd frontend && npm install)
+```
+
+The backend tests require `jest` and `supertest` to be installed in addition to
+the regular dependencies. After everything is installed you can execute all
+tests from the project root:
+
+```bash
+npm test
+```
+
+When running tests inside the Codex environment keep in mind that network
+access is restricted, so you should make sure the dependencies are installed
+before invoking the test command.
+
 ## Configuration
 
 The backend stores data in `backend/database.sqlite` using SQLite. You may set the `JWT_SECRET` environment variable for authentication.
