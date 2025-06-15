@@ -1,87 +1,6 @@
-// backend/server.js
-// This comment was added to test Codex automated testing.
-const express = require('express');
-const cors = require('cors');
-const multer = require('multer');
-const path = require('path');
-const sequelize = require('./db');
-const routes = require('./routes');
-
-// Load all models (to register associations)
-require('./models/Category');
-require('./models/Subcategory');
-require('./models/vendor');
-require('./models/Frequency');
-require('./models/Service');
-require('./models/user');
-require('./models/Attachment'); // Make sure to require this!
-require('./models/BacklogItem');
-require('./models/BacklogNote');
-require('./models/BudgetMonth');
-require('./models/BudgetLine');
-require('./models/BudgetEntry');
-require('./models/IncomeSource');
-require('./models/SavingsPot');
-require('./models/SavingsEntry');
-
-const app = express();
+const { app, sequelize } = require('./app');
 const PORT = process.env.PORT || 4000;
 
-// --- Multer setup for file uploads ---
-const uploadDir = path.join(__dirname, 'uploads');
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    // Optionally: prepend timestamp for uniqueness
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
-const upload = multer({ storage });
-
-// Serve uploaded files statically
-app.use('/uploads', express.static(require('path').join(__dirname, '..', 'uploads')));
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Serve attachments
-app.use('/uploads', express.static(uploadDir));
-
-// Use your existing routes for regular API endpoints
-app.use('/api', routes);
-
-// ---- Attachment upload route (add after app.use('/api', routes)) ----
-require('./models'); // Loads all, registers associations
-const { Service, Attachment } = require('./models');
-
-
-app.post('/api/services/:serviceId/attachments', upload.single('file'), async (req, res) => {
-  const { serviceId } = req.params;
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
-  try {
-    // Optionally, validate that the Service exists first
-    const service = await Service.findByPk(serviceId);
-    if (!service) return res.status(404).json({ error: 'Service not found' });
-
-  const attachment = await Attachment.create({
-    ServiceId: serviceId,
-    filename: req.file.filename,
-    originalname: req.file.originalname,
-    mimetype: req.file.mimetype,
-    size: req.file.size,
-  });
-    res.status(201).json(attachment);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// --- Start the server as before ---
 (async () => {
   try {
     await sequelize.authenticate();
@@ -93,3 +12,5 @@ app.post('/api/services/:serviceId/attachments', upload.single('file'), async (r
     console.error('Unable to connect to database:', err);
   }
 })();
+
+module.exports = app;
