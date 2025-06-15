@@ -53,34 +53,6 @@ app.use('/uploads', express.static(uploadDir));
 // Use your existing routes for regular API endpoints
 app.use('/api', routes);
 
-// ---- Attachment upload route (add after app.use('/api', routes)) ----
-require('./models'); // Loads all, registers associations
-const { Service, Attachment } = require('./models');
-
-
-app.post('/api/services/:serviceId/attachments', upload.single('file'), async (req, res) => {
-  const { serviceId } = req.params;
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
-  try {
-    // Optionally, validate that the Service exists first
-    const service = await Service.findByPk(serviceId);
-    if (!service) return res.status(404).json({ error: 'Service not found' });
-
-  const attachment = await Attachment.create({
-    ServiceId: serviceId,
-    filename: req.file.filename,
-    originalname: req.file.originalname,
-    mimetype: req.file.mimetype,
-    size: req.file.size,
-  });
-    res.status(201).json(attachment);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // --- Start the server as before ---
 (async () => {
   try {
