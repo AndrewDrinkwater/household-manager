@@ -1,4 +1,5 @@
 // backend/server.js
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -83,10 +84,10 @@ app.post('/api/services/:serviceId/attachments', upload.single('file'), async (r
 (async () => {
   try {
     await sequelize.authenticate();
-    console.log('✅ Database connected');
+    console.info('✅ Database connected');
     await sequelize.sync();
-    console.log('✅ Database synced');
-    app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+    console.info('✅ Database synced');
+    app.listen(PORT, () => console.info(`Server listening on port ${PORT}`));
   } catch (err) {
     console.error('Unable to connect to database:', err);
   }

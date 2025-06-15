@@ -18,7 +18,7 @@ async function seed() {
   }
   // Example vendor
   await Vendor.findOrCreate({ where:{ name:'Netflix' } });
-  console.log('✅ Seed complete');
+  console.info('✅ Seed complete');
   process.exit();
 }
 

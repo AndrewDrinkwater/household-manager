@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_URL } from '../api';
 
 export default function LoginScreen({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
@@ -12,7 +13,7 @@ export default function LoginScreen({ onLoginSuccess }) {
     setError(null);
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:4000/api/login', { username, password });
+      const res = await axios.post(`${API_URL}/login`, { username, password });
       setLoading(false);
       localStorage.setItem('token', res.data.token); // store JWT token
       onLoginSuccess(res.data.user);

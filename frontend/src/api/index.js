@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:4000/api';
-const UPLOADS_URL = 'http://localhost:4000/uploads';
+const API_URL =
+  process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+const UPLOADS_URL =
+  process.env.REACT_APP_UPLOADS_URL || 'http://localhost:4000/uploads';
 
 // --- Categories ---
 export const getCategories    = () => axios.get(`${API_URL}/categories`);
@@ -152,4 +154,4 @@ export const createSavingsEntry = data => axios.post(`${API_URL}/savings-entries
 export const updateSavingsEntry = (id, data) => axios.put(`${API_URL}/savings-entries/${id}`, data);
 export const deleteSavingsEntry = id => axios.delete(`${API_URL}/savings-entries/${id}`);
 
-export { UPLOADS_URL };
+export { API_URL, UPLOADS_URL };

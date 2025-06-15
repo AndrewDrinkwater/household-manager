@@ -30,28 +30,28 @@ const SavingsEntry  = require('./models/SavingsEntry');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
 
 // ----------------- LOGIN -----------------
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  console.log('Login attempt:', { username });
+  // attempt login
 
   if (!username || !password) {
-    console.log('Missing username or password');
     return res.status(400).json({ message: 'Missing username or password' });
   }
 
   try {
     const user = await User.findOne({ where: { username } });
     if (!user) {
-      console.log('User not found:', username);
       return res.status(401).json({ message: 'Invalid username or password' });
     }
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-      console.log('Password mismatch for user:', username);
       return res.status(401).json({ message: 'Invalid username or password' });
     }
 
@@ -59,7 +59,6 @@ router.post('/login', async (req, res) => {
       expiresIn: '1h',
     });
 
-    console.log('Login successful for user:', username);
     res.json({ token, user: { id: user.id, username: user.username } });
   } catch (err) {
     console.error('Login error:', err);
@@ -378,44 +377,6 @@ router.delete('/users/:id', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
-// -------------- GENERIC CRUD --------------
-function crud(path, Model, include = []) {
-  router.get(`/${path}`, async (req, res) => {
-    try {
-      const items = await Model.findAll({ include });
-      res.json(items);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  });
-  router.post(`/${path}`, async (req, res) => {
-    try {
-      const inst = await Model.create(req.body);
-      res.status(201).json(inst);
-    } catch (err) {
-      res.status(400).json({ error: err.message });
-    }
-  });
-  router.put(`/${path}/:id`, async (req, res) => {
-    try {
-      const [updated] = await Model.update(req.body, { where: { id: req.params.id } });
-      if (!updated) return res.status(404).json({ error: 'Not found' });
-      res.sendStatus(204);
-    } catch (err) {
-      res.status(400).json({ error: err.message });
-    }
-  });
-  router.delete(`/${path}/:id`, async (req, res) => {
-    try {
-      const deleted = await Model.destroy({ where: { id: req.params.id } });
-      if (!deleted) return res.status(404).json({ error: 'Not found' });
-      res.sendStatus(204);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  });
-}
 
 async function addCarSummaryData(car) {
   const carId = car.id;

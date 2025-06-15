@@ -42,21 +42,22 @@ npm run dev
 
 This uses `concurrently` to run `nodemon` for the backend and `react-scripts start` for the frontend. By default the API listens on port `4000` and the React app on port `3000`.
 
-The API base URL used by the frontend is defined in `frontend/src/api/index.js`:
+The API base URL used by the frontend can be configured via environment
+variables. `frontend/src/api/index.js` falls back to `http://localhost:4000`
+during development:
 
 ```
-const API_URL = 'http://localhost:4000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+const UPLOADS_URL =
+  process.env.REACT_APP_UPLOADS_URL || 'http://localhost:4000/uploads';
 ```
 
-Uploaded files are served from the `/uploads` path:
-
-```
-const UPLOADS_URL = 'http://localhost:4000/uploads';
-```
+Uploaded files are served from the `/uploads` path of the same base URL.
 
 ## Configuration
 
-The backend stores data in `backend/database.sqlite` using SQLite. You may set the `JWT_SECRET` environment variable for authentication.
+The backend stores data in `backend/database.sqlite` using SQLite. A
+`JWT_SECRET` environment variable **must** be provided for authentication.
 
 ## Features
 
