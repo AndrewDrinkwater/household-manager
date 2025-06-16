@@ -14,7 +14,7 @@ The backend exposes REST endpoints for managing contracts, cars, backlog items a
 ## Prerequisites
 
 - **Backend Node.js version:** Node 18 LTS is supported and tested. Other Node.js
-  versions may fail to load the `sqlite3` module used by the backend.
+  versions may fail to load the `sqlite3` module used by the backend. A `.nvmrc` file is provided so running `nvm use` selects the correct version automatically.
 - npm
 
 ## Installation
