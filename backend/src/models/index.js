@@ -18,6 +18,11 @@ const BudgetEntry  = require('./BudgetEntry');
 const IncomeSource = require('./IncomeSource');
 const SavingsPot   = require('./SavingsPot');
 const SavingsEntry = require('./SavingsEntry');
+const HousePlan = require('./HousePlan');
+const HousePlanLineItem = require('./HousePlanLineItem');
+const HousePlanQuote = require('./HousePlanQuote');
+const HousePlanInvoice = require('./HousePlanInvoice');
+const HousePlanTask = require('./HousePlanTask');
 
 // Associations:
 Service.hasMany(Attachment, { foreignKey: 'ServiceId', onDelete: 'CASCADE' });
@@ -50,6 +55,18 @@ SavingsEntry.belongsTo(SavingsPot, { foreignKey: 'SavingsPotId' });
 BudgetMonth.hasMany(SavingsEntry, { foreignKey: 'BudgetMonthId', onDelete: 'CASCADE' });
 SavingsEntry.belongsTo(BudgetMonth, { foreignKey: 'BudgetMonthId' });
 
+// House Plan associations
+HousePlan.hasMany(HousePlanLineItem, { foreignKey: 'HousePlanId', onDelete: 'CASCADE' });
+HousePlanLineItem.belongsTo(HousePlan, { foreignKey: 'HousePlanId' });
+HousePlanLineItem.hasMany(HousePlanQuote, { foreignKey: 'HousePlanLineItemId', onDelete: 'CASCADE' });
+HousePlanQuote.belongsTo(HousePlanLineItem, { foreignKey: 'HousePlanLineItemId' });
+HousePlanLineItem.hasMany(HousePlanInvoice, { foreignKey: 'HousePlanLineItemId', onDelete: 'CASCADE' });
+HousePlanInvoice.belongsTo(HousePlanLineItem, { foreignKey: 'HousePlanLineItemId' });
+HousePlanLineItem.hasMany(HousePlanTask, { foreignKey: 'HousePlanLineItemId', onDelete: 'CASCADE' });
+HousePlanTask.belongsTo(HousePlanLineItem, { foreignKey: 'HousePlanLineItemId' });
+HousePlanTask.belongsTo(User, { as: 'assignedUser', foreignKey: 'assignedTo' });
+User.hasMany(HousePlanTask, { foreignKey: 'assignedTo' });
+
 module.exports = {
   Service,
   Attachment,
@@ -71,4 +88,9 @@ module.exports = {
   IncomeSource,
   SavingsPot,
   SavingsEntry,
+  HousePlan,
+  HousePlanLineItem,
+  HousePlanQuote,
+  HousePlanInvoice,
+  HousePlanTask,
 };

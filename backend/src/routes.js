@@ -26,6 +26,13 @@ const BudgetEntry   = require('./models/BudgetEntry');
 const IncomeSource  = require('./models/IncomeSource');
 const SavingsPot    = require('./models/SavingsPot');
 const SavingsEntry  = require('./models/SavingsEntry');
+const HousePlan = require('./models/HousePlan');
+const HousePlanLineItem = require('./models/HousePlanLineItem');
+const HousePlanQuote = require('./models/HousePlanQuote');
+const HousePlanInvoice = require('./models/HousePlanInvoice');
+const HousePlanTask = require('./models/HousePlanTask');
+
+const { authenticate, requireRole } = require('./middleware/auth');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -908,5 +915,207 @@ crud('budget-entries', BudgetEntry);
 crud('income-sources', IncomeSource);
 crud('savings-pots', SavingsPot);
 crud('savings-entries', SavingsEntry);
+
+// ----- House Plans -----
+
+async function recalcLineItemSpend(lineItemId) {
+  const invoices = await HousePlanInvoice.findAll({ where: { HousePlanLineItemId: lineItemId } });
+  const total = invoices.reduce((acc, inv) => acc + parseFloat(inv.amount || 0), 0);
+  await HousePlanLineItem.update({ actualSpend: total }, { where: { id: lineItemId } });
+  const item = await HousePlanLineItem.findByPk(lineItemId);
+  if (item) await recalcPlanSpend(item.HousePlanId);
+}
+
+async function recalcPlanSpend(planId) {
+  const items = await HousePlanLineItem.findAll({ where: { HousePlanId: planId } });
+  const total = items.reduce((acc, it) => acc + parseFloat(it.actualSpend || 0), 0);
+  await HousePlan.update({ actualSpend: total }, { where: { id: planId } });
+}
+
+router.get('/house-plans', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const plans = await HousePlan.findAll({
+      include: [{
+        model: HousePlanLineItem,
+        include: [HousePlanQuote, HousePlanInvoice, { model: HousePlanTask, include: [{ model: User, as: 'assignedUser' }] }]
+      }]
+    });
+    const data = plans.map(p => {
+      const obj = p.toJSON();
+      const tasks = obj.HousePlanLineItems.flatMap(li => li.HousePlanTasks);
+      const completed = tasks.filter(t => t.status === 'done').length;
+      obj.completion = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
+      return obj;
+    });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/house-plans', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const plan = await HousePlan.create({ ...req.body, createdBy: req.user.id });
+    res.status(201).json(plan);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/house-plans/:id', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const [updated] = await HousePlan.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/house-plans/:id', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const deleted = await HousePlan.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/house-plan-line-items', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const items = await HousePlanLineItem.findAll({ include: [HousePlan] });
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/house-plan-line-items', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const item = await HousePlanLineItem.create(req.body);
+    await recalcPlanSpend(item.HousePlanId);
+    res.status(201).json(item);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/house-plan-line-items/:id', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const [updated] = await HousePlanLineItem.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    const item = await HousePlanLineItem.findByPk(req.params.id);
+    if (item) await recalcPlanSpend(item.HousePlanId);
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/house-plan-line-items/:id', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const item = await HousePlanLineItem.findByPk(req.params.id);
+    const deleted = await HousePlanLineItem.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Not found' });
+    if (item) await recalcPlanSpend(item.HousePlanId);
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/house-plan-invoices', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const inv = await HousePlanInvoice.create(req.body);
+    await recalcLineItemSpend(inv.HousePlanLineItemId);
+    res.status(201).json(inv);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/house-plan-invoices/:id', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const [updated] = await HousePlanInvoice.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    const inv = await HousePlanInvoice.findByPk(req.params.id);
+    if (inv) await recalcLineItemSpend(inv.HousePlanLineItemId);
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/house-plan-invoices/:id', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const inv = await HousePlanInvoice.findByPk(req.params.id);
+    const deleted = await HousePlanInvoice.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Not found' });
+    if (inv) await recalcLineItemSpend(inv.HousePlanLineItemId);
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/house-plan-quotes', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const q = await HousePlanQuote.create(req.body);
+    res.status(201).json(q);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/house-plan-quotes/:id', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const [updated] = await HousePlanQuote.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/house-plan-quotes/:id', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const deleted = await HousePlanQuote.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/house-plan-tasks', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const task = await HousePlanTask.create(req.body);
+    res.status(201).json(task);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put('/house-plan-tasks/:id', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const [updated] = await HousePlanTask.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete('/house-plan-tasks/:id', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const deleted = await HousePlanTask.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Not found' });
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 module.exports = router;
