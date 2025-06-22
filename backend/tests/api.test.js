@@ -57,3 +57,43 @@ test('create and list cars', async () => {
   expect(list.length).toBe(1);
   expect(list[0].make).toBe('Ford');
 });
+
+test('house plan endpoints require admin', async () => {
+  let res = await fetch(baseUrl + '/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'admin', email: 'a@a.com', password: 'pw', role: 'admin' })
+  });
+  expect(res.status).toBe(201);
+
+  res = await fetch(baseUrl + '/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'admin', password: 'pw' })
+  });
+  const adminToken = (await res.json()).token;
+
+  res = await fetch(baseUrl + '/house-plans', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + adminToken },
+    body: JSON.stringify({ title: 'Renovation', status: 'planned', budget: 1000 })
+  });
+  expect(res.status).toBe(201);
+
+  await fetch(baseUrl + '/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'user', email: 'u@u.com', password: 'pw' })
+  });
+  res = await fetch(baseUrl + '/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'user', password: 'pw' })
+  });
+  const userToken = (await res.json()).token;
+
+  res = await fetch(baseUrl + '/house-plans', {
+    headers: { Authorization: 'Bearer ' + userToken }
+  });
+  expect(res.status).toBe(403);
+});
