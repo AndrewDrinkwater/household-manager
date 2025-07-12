@@ -152,4 +152,9 @@ export const createSavingsEntry = data => axios.post(`${API_URL}/savings-entries
 export const updateSavingsEntry = (id, data) => axios.put(`${API_URL}/savings-entries/${id}`, data);
 export const deleteSavingsEntry = id => axios.delete(`${API_URL}/savings-entries/${id}`);
 
+// --- Spin Wheel ---
+export const getSpinConfig = () => axios.get(`${API_URL}/spin-config`);
+export const saveSpinConfig = data => axios.put(`${API_URL}/spin-config`, data);
+export const spin = () => axios.post(`${API_URL}/spin`);
+
 export { UPLOADS_URL };

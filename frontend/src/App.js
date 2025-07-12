@@ -14,6 +14,8 @@ import BacklogManager from './modules/backlogManager/backlogManager';
 import UserManager from './modules/userManager/userManager';
 import FinanceManager from './modules/financeManager/financeManager';
 import ThemeToggle from './components/ui/ThemeToggle';
+import SpinWheel from './modules/spinWheel/SpinWheel';
+import AdminSpinConfig from './modules/spinWheel/AdminSpinConfig';
 
 function NavTabs() {
   const { pathname } = useLocation();
@@ -48,6 +50,12 @@ function NavTabs() {
         Finance
       </Link>
       <Link
+        to="/spin"
+        className={pathname.startsWith('/spin') ? 'active' : ''}
+      >
+        Spin Wheel
+      </Link>
+      <Link
         to="/admin/users"
         className={pathname === '/admin/users' ? 'active' : ''}
       >
@@ -72,8 +80,12 @@ function PageHeader() {
     title = 'Backlog';
   } else if (pathname.startsWith('/finance')) {
     title = 'Finance';
+  } else if (pathname.startsWith('/spin')) {
+    title = 'Spin Wheel';
   } else if (pathname === '/admin/users') {
     title = 'User Management (Admin Only)';
+  } else if (pathname === '/admin/spin') {
+    title = 'Spin Config';
   } else {
     title = '';
   }
@@ -94,6 +106,8 @@ export default function App() {
           <Route path="/cars/*" element={<CarManager />} />  {/* new */}
         <Route path="/backlog" element={<BacklogManager />} />
         <Route path="/finance" element={<FinanceManager />} />
+        <Route path="/spin" element={<SpinWheel />} />
+        <Route path="/admin/spin" element={<AdminSpinConfig />} />
         <Route path="/admin/users" element={<UserManager />} />
         </Routes>
       </div>

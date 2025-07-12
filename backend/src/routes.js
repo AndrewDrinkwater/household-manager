@@ -1117,5 +1117,39 @@ router.delete('/house-plan-tasks/:id', authenticate, requireRole('admin'), async
   }
 });
 
+// --------- Spin Wheel ---------
+const { SpinSegment, SpinHistory } = require('./models');
+
+router.get('/spin-config', async (req, res) => {
+  const segments = await SpinSegment.findAll({ order: [['id', 'ASC']] });
+  res.json(segments);
+});
+
+router.put('/spin-config', authenticate, requireRole('admin'), async (req, res) => {
+  await SpinSegment.destroy({ where: {} });
+  await SpinSegment.bulkCreate(req.body);
+  const segments = await SpinSegment.findAll({ order: [['id', 'ASC']] });
+  res.json(segments);
+});
+
+router.post('/spin', async (req, res) => {
+  const ip = req.ip;
+  const last = await SpinHistory.findOne({ where: { ip }, order: [['createdAt', 'DESC']] });
+  if (last && Date.now() - new Date(last.createdAt).getTime() < 24 * 60 * 60 * 1000) {
+    return res.status(429).json({ error: 'Daily spin limit reached' });
+  }
+  const segments = await SpinSegment.findAll();
+  if (!segments.length) return res.status(400).json({ error: 'No segments configured' });
+  const total = segments.reduce((sum, s) => sum + s.weight, 0);
+  let rnd = Math.random() * total;
+  let chosen = segments[0];
+  for (const seg of segments) {
+    if (rnd < seg.weight) { chosen = seg; break; }
+    rnd -= seg.weight;
+  }
+  await SpinHistory.create({ ip, resultLabel: chosen.label, resultType: chosen.type });
+  res.json({ label: chosen.label, type: chosen.type });
+});
+
 
 module.exports = router;

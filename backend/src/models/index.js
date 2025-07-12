@@ -23,6 +23,8 @@ const HousePlanLineItem = require('./HousePlanLineItem');
 const HousePlanQuote = require('./HousePlanQuote');
 const HousePlanInvoice = require('./HousePlanInvoice');
 const HousePlanTask = require('./HousePlanTask');
+const SpinSegment = require('./SpinSegment');
+const SpinHistory = require('./SpinHistory');
 
 // Associations:
 Service.hasMany(Attachment, { foreignKey: 'ServiceId', onDelete: 'CASCADE' });
@@ -93,4 +95,6 @@ module.exports = {
   HousePlanQuote,
   HousePlanInvoice,
   HousePlanTask,
+  SpinSegment,
+  SpinHistory,
 };
