@@ -3,6 +3,9 @@ const Category   = require('./models/Category');
 const Subcategory= require('./models/Subcategory');
 const Vendor     = require('./models/vendor');
 const Frequency  = require('./models/Frequency');
+const Activity = require('./models/Activity');
+const Location = require('./models/Location');
+const ActivityLocation = require('./models/ActivityLocation');
 
 async function seed() {
   await sequelize.sync();
@@ -18,6 +21,36 @@ async function seed() {
   }
   // Example vendor
   await Vendor.findOrCreate({ where:{ name:'Netflix' } });
+
+  // Activities and locations example
+  const [swimming] = await Activity.findOrCreate({
+    where: { name: 'Swimming' },
+    defaults: {
+      description: 'Go for a swim',
+      defaultPriceLevel: 2,
+      defaultIndoorOutdoor: 'indoor',
+      defaultEducationalValue: 'medium',
+      isHomeBased: false,
+      physicalDemand: 'medium',
+    }
+  });
+
+  const [leisure] = await Location.findOrCreate({
+    where: { name: 'Knutsford Leisure Centre' },
+    defaults: {
+      address: 'Knutsford',
+      milesFromHome: 3.2,
+      tags: JSON.stringify(['near Knutsford']),
+      websiteUrl: 'https://example.com',
+      isClosed: false,
+    }
+  });
+
+  await ActivityLocation.findOrCreate({
+    where: { ActivityId: swimming.id, LocationId: leisure.id },
+    defaults: { isActive: true }
+  });
+
   console.log('✅ Seed complete');
   process.exit();
 }
