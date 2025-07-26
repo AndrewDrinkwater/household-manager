@@ -25,6 +25,9 @@ const HousePlanInvoice = require('./HousePlanInvoice');
 const HousePlanTask = require('./HousePlanTask');
 const SpinSegment = require('./SpinSegment');
 const SpinHistory = require('./SpinHistory');
+const Activity = require('./Activity');
+const Location = require('./Location');
+const ActivityLocation = require('./ActivityLocation');
 
 // Associations:
 Service.hasMany(Attachment, { foreignKey: 'ServiceId', onDelete: 'CASCADE' });
@@ -69,6 +72,9 @@ HousePlanTask.belongsTo(HousePlanLineItem, { foreignKey: 'HousePlanLineItemId' }
 HousePlanTask.belongsTo(User, { as: 'assignedUser', foreignKey: 'assignedTo' });
 User.hasMany(HousePlanTask, { foreignKey: 'assignedTo' });
 
+Activity.belongsToMany(Location, { through: ActivityLocation });
+Location.belongsToMany(Activity, { through: ActivityLocation });
+
 module.exports = {
   Service,
   Attachment,
@@ -97,4 +103,7 @@ module.exports = {
   HousePlanTask,
   SpinSegment,
   SpinHistory,
+  Activity,
+  Location,
+  ActivityLocation,
 };

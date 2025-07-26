@@ -31,6 +31,9 @@ const HousePlanLineItem = require('./models/HousePlanLineItem');
 const HousePlanQuote = require('./models/HousePlanQuote');
 const HousePlanInvoice = require('./models/HousePlanInvoice');
 const HousePlanTask = require('./models/HousePlanTask');
+const Activity = require('./models/Activity');
+const Location = require('./models/Location');
+const ActivityLocation = require('./models/ActivityLocation');
 
 const { authenticate, requireRole } = require('./middleware/auth');
 
@@ -1149,6 +1152,83 @@ router.post('/spin', async (req, res) => {
   }
   await SpinHistory.create({ ip, resultLabel: chosen.label, resultType: chosen.type });
   res.json({ label: chosen.label, type: chosen.type });
+});
+
+// --------- Activities ---------
+router.get('/activities/filter', async (req, res) => {
+  const parseArray = (v) => {
+    if (!v) return undefined;
+    return Array.isArray(v) ? v : String(v).split(',');
+  };
+
+  try {
+    const all = await ActivityLocation.findAll({
+      where: { isActive: true },
+      include: [
+        { model: Activity },
+        { model: Location, where: { isClosed: false } }
+      ]
+    });
+
+    let results = all.map(al => {
+      const act = al.Activity;
+      const loc = al.Location;
+      return {
+        activityId: act.id,
+        activityName: act.name,
+        locationName: loc.name,
+        priceLevel: al.priceLevelOverride ?? act.defaultPriceLevel,
+        indoorOutdoor: al.indoorOutdoorOverride ?? act.defaultIndoorOutdoor,
+        educationalValue: al.educationalValueOverride ?? act.defaultEducationalValue,
+        milesFromHome: parseFloat(loc.milesFromHome),
+        lastChosenDate: act.lastChosenDate,
+        locationTags: loc.tags,
+        websiteUrl: loc.websiteUrl,
+        physicalDemand: act.physicalDemand,
+        isHomeBased: act.isHomeBased,
+      };
+    });
+
+    const distanceMax = parseFloat(req.query.distanceMax);
+    const locationTags = parseArray(req.query.locationTags);
+    const priceLevels = parseArray(req.query.priceLevels)?.map(n => parseInt(n));
+    const indoorOutdoor = parseArray(req.query.indoorOutdoor);
+    const educationalValue = parseArray(req.query.educationalValue);
+    const physicalDemandLevels = parseArray(req.query.physicalDemandLevels);
+    const homeBasedOnly = req.query.homeBasedOnly === 'true';
+
+    results = results.filter(r => {
+      if (!isNaN(distanceMax) && r.milesFromHome > distanceMax) return false;
+      if (homeBasedOnly && !r.isHomeBased) return false;
+      if (locationTags && !locationTags.every(t => r.locationTags.includes(t))) return false;
+      if (priceLevels && !priceLevels.includes(r.priceLevel)) return false;
+      if (indoorOutdoor && !indoorOutdoor.includes(r.indoorOutdoor)) return false;
+      if (educationalValue && !educationalValue.includes(r.educationalValue)) return false;
+      if (physicalDemandLevels && !physicalDemandLevels.includes(r.physicalDemand)) return false;
+      return true;
+    });
+
+    const sortBy = req.query.sortBy;
+    if (sortBy === 'distance') results.sort((a,b) => a.milesFromHome - b.milesFromHome);
+    if (sortBy === 'price') results.sort((a,b) => (a.priceLevel ?? 0) - (b.priceLevel ?? 0));
+    if (sortBy === 'lastChosen') results.sort((a,b) => new Date(b.lastChosenDate||0) - new Date(a.lastChosenDate||0));
+    if (sortBy === 'alphabetical') results.sort((a,b) => a.activityName.localeCompare(b.activityName));
+
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.patch('/activities/:id/last-chosen', async (req, res) => {
+  try {
+    const act = await Activity.findByPk(req.params.id);
+    if (!act) return res.status(404).json({ error: 'Not found' });
+    await act.update({ lastChosenDate: req.body.lastChosenDate || new Date() });
+    res.json({ lastChosenDate: act.lastChosenDate });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 
